@@ -101,7 +101,7 @@
     .btn:active { transform: translateY(1px) }
     .btn[disabled] { opacity: .45; cursor: not-allowed }
 
-    .counter { color: --muted; font-size: 13px; min-width: 120px; text-align: center }
+    .counter { color: var(--muted); font-size: 13px; min-width: 120px; text-align: center }
 
     /* ===== Flip base ===== */
     .flip { position: absolute; inset: 0; z-index: 3; pointer-events: none; border-radius: var(--radius); overflow: hidden; }
@@ -147,6 +147,17 @@
       .btn { padding: 8px 12px; border-radius: 12px; font-weight: 600; }
       .counter { font-size: 12px; }
     }
+
+    /* ===== Modal tela cheia ===== */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.82); z-index: 1000; display: none; }
+    .modal-overlay.open { display: block; }
+    .modal-inner { width: 100%; height: 100%; display: grid; grid-template-rows: auto 1fr; padding: 12px; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 8px 10px; }
+    .modal-title { font-weight: 700; color: #e2e8f0; }
+    .modal-nav { display: none; align-items: center; gap: 8px; }
+    .modal-count { color: var(--muted); font-size: 13px; }
+    .modal-body { position: relative; margin-top: 10px; }
+    .modal-body iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; border-radius: 12px; background: #0b1220; }
   </style>
 </head>
 
@@ -163,8 +174,27 @@
         <button class="btn prev" type="button">◀ Voltar</button>
         <span class="counter"></span>
         <button class="btn next" type="button">Avançar ▶</button>
+        <button class="btn open-full" type="button" title="Abrir conteúdo em tela cheia" style="display:none">Jogar</button>
       </div>
     </section>
+  </div>
+
+  <!-- Modal fullscreen -->
+  <div class="modal-overlay" id="modal" aria-hidden="true">
+    <div class="modal-inner" role="dialog" aria-modal="true" aria-label="Conteúdo interativo em tela cheia">
+      <div class="modal-header">
+        <div class="modal-title"></div>
+        <div class="modal-nav" id="modalNav">
+          <button class="btn modal-prev" type="button" aria-label="Anterior">◀</button>
+          <span class="modal-count" id="modalCounter">1/1</span>
+          <button class="btn modal-next" type="button" aria-label="Próximo">▶</button>
+        </div>
+        <button class="btn modal-close" id="modalClose" type="button" aria-label="Fechar">✕</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="modalIframe" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -181,8 +211,18 @@
     const img = document.getElementById('page');
     const prevBtn = document.querySelector('.prev');
     const nextBtn = document.querySelector('.next');
+    const openFullBtn = document.querySelector('.open-full');
     const counter = document.querySelector('.counter');
     const viewer = document.getElementById('viewer');
+
+    // Modal refs
+    const modal = document.getElementById('modal');
+    const modalIframe = document.getElementById('modalIframe');
+    const modalClose = document.getElementById('modalClose');
+    const modalPrev = document.querySelector('.modal-prev');
+    const modalNext = document.querySelector('.modal-next');
+    const modalNav = document.getElementById('modalNav');
+    const modalCounter = document.getElementById('modalCounter');
 
     // pré-carrega imagens
     IMAGENS.forEach(src => { const i = new Image(); i.src = src; });
@@ -191,6 +231,16 @@
     let flipping = false;
     let userActivated = false; // só liberamos mídia após gesto do usuário
 
+    // --- Som de virada de página ---
+    const flipAudio = new Audio('page-flip.mp3');
+    flipAudio.preload = 'auto';
+    // flipAudio.volume = 1; // ajuste o volume aqui (0.0 a 1.0)
+
+    function playFlip() {
+      if (!userActivated) return; // respeita a política de gesto do navegador
+      try { flipAudio.currentTime = 0; flipAudio.play().catch(() => {}); } catch (_) {}
+    }
+
     function toCssUnit(v, unit = '%') {
       if (typeof v === 'string') return v;
       if (typeof v === 'number') return v + unit;
@@ -198,14 +248,10 @@
     }
 
     function applyIframeVisibility(visible) {
-      viewer.querySelectorAll('.overlay-iframe').forEach(el => {
-        el.style.visibility = visible ? 'visible' : 'hidden';
-      });
+      viewer.querySelectorAll('.overlay-iframe').forEach(el => { el.style.visibility = visible ? 'visible' : 'hidden'; });
     }
 
-    function clearOverlays() {
-      viewer.querySelectorAll('.overlay-iframe').forEach(el => el.remove());
-    }
+    function clearOverlays() { viewer.querySelectorAll('.overlay-iframe').forEach(el => el.remove()); }
 
     function addOverlaysForPage(pageNumber) {
       const configs = IFRAMES.filter(item => item.pagina === pageNumber);
@@ -217,22 +263,12 @@
         f.setAttribute('frameborder', '0');
         f.setAttribute('allowtransparency', 'true');
         f.setAttribute('loading', 'lazy');
-        // Permissões para autoplay quando permitido pelo gesto
         f.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; encrypted-media');
-
-        // posicionamento responsivo
         f.style.left = toCssUnit(cfg.posicaoX);
         f.style.top = toCssUnit(cfg.posicaoY);
         f.style.width = toCssUnit(cfg.largura);
         f.style.height = toCssUnit(cfg.altura);
-
-        // Só define o SRC se já houve gesto do usuário
-        if (userActivated) {
-          f.src = cfg.link;
-        } else {
-          f.dataset.src = cfg.link; // guarda para ativar depois
-        }
-
+        if (userActivated) { f.src = cfg.link; } else { f.dataset.src = cfg.link; }
         f.style.display = 'block';
         viewer.appendChild(f);
       });
@@ -246,19 +282,26 @@
       const wrap = document.querySelector('.wrap');
 
       const vw = Math.min(1100, window.innerWidth * 0.92);
-
       const wrapStyles = getComputedStyle(wrap);
       const wrapPad = parseFloat(wrapStyles.paddingTop) + parseFloat(wrapStyles.paddingBottom);
-
       const cardStyles = getComputedStyle(card);
       const cardPad = parseFloat(cardStyles.paddingTop) + parseFloat(cardStyles.paddingBottom);
-
       const safety = 40; // folga para bordas/margens
       const availableH = window.innerHeight - header.offsetHeight - controls.offsetHeight - wrapPad - cardPad - safety;
-
       const side = Math.max(220, Math.min(vw, availableH));
       viewer.style.width = side + 'px';
       viewer.style.height = side + 'px';
+    }
+
+    function updateFullscreenBtn() {
+      const count = IFRAMES.filter(item => item.pagina === (index + 1)).length;
+      if (count > 0) {
+        openFullBtn.style.display = 'inline-block';
+        openFullBtn.disabled = false;
+      } else {
+        openFullBtn.style.display = 'none';
+        openFullBtn.disabled = true;
+      }
     }
 
     function render() {
@@ -266,11 +309,10 @@
       counter.textContent = `Página ${index + 1} de ${IMAGENS.length}`;
       prevBtn.disabled = index === 0;
       nextBtn.disabled = index === IMAGENS.length - 1;
-
-      // iframes por página (dinâmicos via config)
       clearOverlays();
       addOverlaysForPage(index + 1);
       applyIframeVisibility(true);
+      updateFullscreenBtn();
     }
 
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -278,59 +320,40 @@
     function createFlip(currentSrc, targetSrc, direction) {
       const flip = document.createElement('div');
       flip.className = `flip ${direction}`;
-      const sheet = document.createElement('div');
-      sheet.className = 'sheet';
-      const front = document.createElement('div');
-      front.className = 'side front';
-      const back = document.createElement('div');
-      back.className = 'side back';
+      const sheet = document.createElement('div'); sheet.className = 'sheet';
+      const front = document.createElement('div'); front.className = 'side front';
+      const back = document.createElement('div'); back.className = 'side back';
+      if (direction === 'prev') { back.style.backgroundImage = `url("${currentSrc}")`; front.style.backgroundImage = `url("${targetSrc}")`; }
+      else { front.style.backgroundImage = `url("${currentSrc}")`; back.style.backgroundImage = `url("${targetSrc}")`; }
+      sheet.appendChild(front); sheet.appendChild(back); flip.appendChild(sheet); return flip;
+    }
 
-      if (direction === 'prev') {
-        back.style.backgroundImage  = `url("${currentSrc}")`;
-        front.style.backgroundImage = `url("${targetSrc}")`;
-      } else {
-        front.style.backgroundImage = `url("${currentSrc}")`;
-        back.style.backgroundImage  = `url("${targetSrc}")`;
-      }
-
-      sheet.appendChild(front);
-      sheet.appendChild(back);
-      flip.appendChild(sheet);
-      return flip;
+    function closeModal() {
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+      modalIframe.src = '';
     }
 
     function flipTo(newIndex, dir) {
       if (flipping) return;
       if (newIndex < 0 || newIndex > IMAGENS.length - 1) return;
 
-      if (prefersReduced) {
-        index = newIndex;
-        render();
-        return;
-      }
+      // fecha modal se estiver aberto antes de virar
+      if (modal.classList.contains('open')) closeModal();
+
+      // toca o som de virar página no início da animação
+      playFlip();
+
+      if (prefersReduced) { index = newIndex; render(); return; }
 
       flipping = true;
-
       const currentSrc = IMAGENS[index];
       const targetSrc  = IMAGENS[newIndex];
-
-      // Evita engasgo dos iframes durante o flip
       applyIframeVisibility(false);
-
       const flip = createFlip(currentSrc, targetSrc, dir);
       viewer.appendChild(flip);
-
-      if (dir === 'next') {
-        index = newIndex; render();
-      }
-
-      const done = () => {
-        flip.removeEventListener('animationend', done);
-        flip.remove();
-        if (dir === 'prev') { index = newIndex; render(); }
-        flipping = false;
-        applyIframeVisibility(true);
-      };
+      if (dir === 'next') { index = newIndex; render(); }
+      const done = () => { flip.removeEventListener('animationend', done); flip.remove(); if (dir === 'prev') { index = newIndex; render(); } flipping = false; applyIframeVisibility(true); };
       flip.addEventListener('animationend', done);
     }
 
@@ -340,33 +363,49 @@
     nextBtn.addEventListener('click', next);
     prevBtn.addEventListener('click', prev);
 
-    // Qualquer gesto do usuário ativa a mídia (carrega SRCs e libera autoplay permitido)
+    // Qualquer gesto do usuário ativa a mídia (carrega SRCs dos iframes e desbloqueia o áudio)
     function onUserGesture() {
-      if (userActivated) return; // já ativado
-      userActivated = true;
-      // ativa iframes já injetados
-      viewer.querySelectorAll('.overlay-iframe').forEach(f => {
-        if (!f.src && f.dataset.src) f.src = f.dataset.src;
-      });
+      if (userActivated) return; userActivated = true;
+      try { flipAudio.muted = true; flipAudio.play().then(() => { flipAudio.pause(); flipAudio.currentTime = 0; flipAudio.muted = false; }).catch(() => { flipAudio.muted = false; }); } catch (_) { flipAudio.muted = false; }
+      viewer.querySelectorAll('.overlay-iframe').forEach(f => { if (!f.src && f.dataset.src) f.src = f.dataset.src; });
     }
-
-    // Captura o primeiro gesto do usuário (antes de outros handlers)
     window.addEventListener('pointerdown', onUserGesture, { once: true, capture: true });
     window.addEventListener('keydown', onUserGesture, { once: true, capture: true });
 
     // Navegação por teclas
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight') next();
-      if (e.key === 'ArrowLeft') prev();
-    });
+    window.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') next(); if (e.key === 'ArrowLeft') prev(); if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
 
-    // clique nos lados do viewer (também vai disparar pointerdown -> ativa mídia)
-    viewer.addEventListener('click', (e) => {
-      const rect = viewer.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      if (x > rect.width * 0.6) next();
-      else if (x < rect.width * 0.4) prev();
-    });
+    // clique nos lados do viewer
+    viewer.addEventListener('click', (e) => { const rect = viewer.getBoundingClientRect(); const x = e.clientX - rect.left; if (x > rect.width * 0.6) next(); else if (x < rect.width * 0.4) prev(); });
+
+    // ===== Modal: abrir/fechar e navegar entre múltiplos iframes da página =====
+    let modalIndexSel = 0;
+    let modalPageConfigs = [];
+
+    function openModalForCurrentPage() {
+      modalPageConfigs = IFRAMES.filter(item => item.pagina === (index + 1));
+      if (modalPageConfigs.length === 0) return;
+      modalIndexSel = 0;
+      setModalContent();
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function setModalContent() {
+      const cfg = modalPageConfigs[modalIndexSel];
+      if (!cfg) return;
+      // define SRC só agora, sem alterar o overlay existente
+      if (!userActivated) onUserGesture(); // garante gesto/perm.
+      modalIframe.src = cfg.link;
+      modalCounter.textContent = `${modalIndexSel + 1}/${modalPageConfigs.length}`;
+      modalNav.style.display = modalPageConfigs.length > 1 ? 'flex' : 'none';
+    }
+
+    openFullBtn.addEventListener('click', openModalForCurrentPage);
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    modalPrev.addEventListener('click', () => { if (modalPageConfigs.length < 2) return; modalIndexSel = (modalIndexSel - 1 + modalPageConfigs.length) % modalPageConfigs.length; setModalContent(); });
+    modalNext.addEventListener('click', () => { if (modalPageConfigs.length < 2) return; modalIndexSel = (modalIndexSel + 1) % modalPageConfigs.length; setModalContent(); });
 
     // Responsividade
     window.addEventListener('resize', resizeViewer);
