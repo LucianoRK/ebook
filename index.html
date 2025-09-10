@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ebook – com iframe nos quadrantes</title>
+  <title>Ebook</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -12,7 +11,8 @@
       --card: #111827;
       --radius: 18px;
       --shadow: 0 16px 50px rgba(0, 0, 0, .45);
-      --overlay-gap: 12px; /* margem do iframe para as bordas */
+      --overlay-gap: 12px;
+      --flip-duration: 1200ms;
     }
 
     * { box-sizing: border-box }
@@ -20,32 +20,25 @@
     body {
       margin: 0;
       min-height: 100dvh;
-      background: radial-gradient(1200px 1200px at 80% -10%, #1e293b, transparent), var(--bg);
+      background: url('fundo.png') center / cover no-repeat fixed, var(--bg);
       color: #e2e8f0;
       font: 500 16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,"Helvetica Neue",Arial
     }
 
-    header { padding: 34px 18px 12px; text-align: center }
-
-    h1 {
-      margin: 0 0 10px;
-      font-size: clamp(22px, 3.4vw, 44px);
-      letter-spacing: .3px
-    }
+    header { padding: 12px 18px; text-align: center }
 
     .wrap {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 30px 16px 80px
+      padding: 16px 16px 28px
     }
 
     .card {
-      width: min(1180px, 96vw);
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      background: #4a1d0a;
       border: 1px solid rgba(255,255,255,.08);
       border-radius: calc(var(--radius) + 4px);
-      padding: 20px 20px 16px;
+      padding: 16px;
       box-shadow: var(--shadow);
       backdrop-filter: blur(4px);
       margin: 0 auto
@@ -53,12 +46,13 @@
 
     .viewer {
       width: min(1100px, 92vw);
-      aspect-ratio: 3/2;
+      aspect-ratio: 1 / 1; /* fallback */
       background: #0b1220;
       border-radius: var(--radius);
       position: relative;
       margin: 0 auto 14px;
-      overflow: hidden; /* mantém a imagem “presa” ao contêiner */
+      overflow: hidden;
+      perspective: 900px;
     }
 
     .viewer img {
@@ -66,31 +60,22 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain; /* mostra a imagem inteira, sem corte */
       display: block;
+      border-radius: var(--radius);
+      z-index: 0;
+      background: #0b1220; /* cor de fundo nas bordas (letterbox) */
     }
 
-    /* iframe sobreposto – não corta e tem margem */
+    /* Overlays configuráveis (criados dinamicamente) */
     .overlay-iframe {
       position: absolute;
-      /* largura ocupa metade do viewer, descontando margem dos dois lados */
-      width: calc(50% - (var(--overlay-gap) * 2));
-      /* mantém a proporção do embed do Scratch (485x402) */
-      aspect-ratio: 485 / 402;
-      height: auto;                 /* deixa o browser calcular a altura pela proporção */
-      max-height: calc(50% - (var(--overlay-gap) * 2)); /* nunca maior que metade em altura */
       border: none;
       border-radius: 12px;
       z-index: 2;
-      display: none;                /* só mostra nas páginas desejadas */
-      background: #0b1220;         /* fallback suave durante o carregamento */
+      display: none; /* vira block quando a página corresponder */
+      background: #0b1220;
     }
-
-    /* Primeiro quadrante (top-left) com margem */
-    .quadrante-1 { top: var(--overlay-gap); left: var(--overlay-gap); }
-
-    /* Terceiro quadrante (bottom-left) com margem */
-    .quadrante-3 { bottom: var(--overlay-gap); left: var(--overlay-gap); }
 
     .controls {
       display: flex;
@@ -116,29 +101,63 @@
     .btn:active { transform: translateY(1px) }
     .btn[disabled] { opacity: .45; cursor: not-allowed }
 
-    .counter { color: var(--muted); font-size: 13px; min-width: 120px; text-align: center }
+    .counter { color: --muted; font-size: 13px; min-width: 120px; text-align: center }
+
+    /* ===== Flip base ===== */
+    .flip { position: absolute; inset: 0; z-index: 3; pointer-events: none; border-radius: var(--radius); overflow: hidden; }
+    .sheet, .side { transform: translateZ(0); will-change: transform, opacity; }
+    .sheet { position: absolute; inset: 0; transform-style: preserve-3d; border-radius: var(--radius); }
+    .side { position: absolute; inset: 0; border-radius: var(--radius); background-size: contain; background-repeat: no-repeat; background-position: center; backface-visibility: hidden; }
+    .flip .side.back { transform: rotateY(180deg); }
+    .side::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+
+    .flip.next .sheet { transform-origin: left bottom; animation: turn-left-corner-next var(--flip-duration) ease-in-out forwards; }
+    .flip.next .side.front::after { background: radial-gradient(140% 140% at 0% 100%, rgba(0,0,0,.45), rgba(0,0,0,0) 60%); animation: shade-left-corner var(--flip-duration) ease-in-out forwards; }
+
+    .flip.prev .sheet { transform-origin: left bottom; animation: turn-left-corner-prev var(--flip-duration) ease-in-out forwards; }
+    .flip.prev .side.front::after { background: radial-gradient(140% 140% at 0% 100%, rgba(0,0,0,.45), rgba(0,0,0,0) 60%); animation: shade-left-corner-prev var(--flip-duration) ease-in-out forwards; }
+
+    @keyframes turn-left-corner-next {
+      0% { transform: rotateY(0deg) rotateZ(0deg); box-shadow: 0 40px 80px rgba(0,0,0,.35); opacity: 1; }
+      35%{ transform: rotateY(-70deg) rotateZ(-5deg); box-shadow: 0 50px 100px rgba(0,0,0,.45); }
+      65%{ transform: rotateY(-130deg) rotateZ(-9deg); box-shadow: 0 60px 120px rgba(0,0,0,.50); }
+      92%{ transform: rotateY(-178deg) rotateZ(-9deg); box-shadow: 0 40px 80px rgba(0,0,0,.30); }
+      100%{ transform: rotateY(-180deg) rotateZ(0deg); box-shadow: none; opacity: 0; }
+    }
+    @keyframes shade-left-corner { 0%{opacity:.0} 30%{opacity:.6} 70%{opacity:.35} 100%{opacity:.0} }
+
+    @keyframes turn-left-corner-prev {
+      0% { transform: rotateY(-180deg) rotateZ(0deg); box-shadow: none; opacity: 0.0; }
+      8% { box-shadow: 0 40px 80px rgba(0,0,0,.30); opacity: 1.0; }
+      35%{ transform: rotateY(-130deg) rotateZ(-9deg); box-shadow: 0 60px 120px rgba(0,0,0,.50); }
+      65%{ transform: rotateY(-70deg)  rotateZ(-5deg); box-shadow: 0 50px 100px rgba(0,0,0,.45); }
+      100%{ transform: rotateY(0deg)    rotateZ(0deg);  box-shadow: 0 40px 80px rgba(0,0,0,.35); opacity: 1.0; }
+    }
+    @keyframes shade-left-corner-prev { 0%{opacity:.0} 30%{opacity:.35} 70%{opacity:.6} 100%{opacity:.0} }
+
+    @media (prefers-reduced-motion: reduce) {
+      .flip .sheet { animation: none !important; }
+      .side::after { display: none !important; }
+    }
+
+    @media (max-width: 480px) {
+      header { padding: 8px 10px; }
+      .wrap { padding: 12px 10px 18px; }
+      .card { padding: 12px; }
+      .btn { padding: 8px 12px; border-radius: 12px; font-weight: 600; }
+      .counter { font-size: 12px; }
+    }
   </style>
 </head>
 
 <body>
-  <header>
-    <h1>Ebook mozinho</h1>
-  </header>
+  <header></header>
 
   <div class="wrap">
     <section class="card">
       <div class="viewer" id="viewer">
         <img id="page" alt="Página" loading="eager" />
-
-        <!-- iframe sobreposto -->
-        <iframe
-          id="iframeOverlay"
-          src="https://scratch.mit.edu/projects/1190046255/embed"
-          class="overlay-iframe"
-          allowtransparency="true"
-          frameborder="0"
-          allowfullscreen>
-        </iframe>
+        <!-- iframes de overlay serão criados dinamicamente aqui -->
       </div>
       <div class="controls">
         <button class="btn prev" type="button">◀ Voltar</button>
@@ -149,18 +168,98 @@
   </div>
 
   <script>
-    const IMAGENS = ['1.jpg','2.jpg','3.jpg','4.jpg'];
+    // ====== CONFIGURAÇÃO DOS IFRAMES (percentuais do tamanho do viewer) ======
+    // posicaoX/posicaoY/largura/altura: número = % (0–100) ou string com unidade (ex: '320px', '45%')
+    const IFRAMES = [
+      { pagina: 3, posicaoX: 32, posicaoY: 45, largura: 61, altura: 50, link: 'https://scratch.mit.edu/projects/1212995699/embed' },
+      { pagina: 4, posicaoX: 4,  posicaoY: 52, largura: 53, altura: 44, link: 'https://scratch.mit.edu/projects/1212868708/embed' },
+      { pagina: 5, posicaoX: 33, posicaoY: 49, largura: 60, altura: 49, link: 'https://scratch.mit.edu/projects/1212987185/embed' }
+    ];
+
+    const IMAGENS = ['1.png','2.png','3.png','4.png','5.png','6.png'];
 
     const img = document.getElementById('page');
     const prevBtn = document.querySelector('.prev');
     const nextBtn = document.querySelector('.next');
     const counter = document.querySelector('.counter');
-    const iframe = document.getElementById('iframeOverlay');
+    const viewer = document.getElementById('viewer');
 
-    // pré-carrega as imagens
+    // pré-carrega imagens
     IMAGENS.forEach(src => { const i = new Image(); i.src = src; });
 
     let index = 0;
+    let flipping = false;
+    let userActivated = false; // só liberamos mídia após gesto do usuário
+
+    function toCssUnit(v, unit = '%') {
+      if (typeof v === 'string') return v;
+      if (typeof v === 'number') return v + unit;
+      return '0' + unit;
+    }
+
+    function applyIframeVisibility(visible) {
+      viewer.querySelectorAll('.overlay-iframe').forEach(el => {
+        el.style.visibility = visible ? 'visible' : 'hidden';
+      });
+    }
+
+    function clearOverlays() {
+      viewer.querySelectorAll('.overlay-iframe').forEach(el => el.remove());
+    }
+
+    function addOverlaysForPage(pageNumber) {
+      const configs = IFRAMES.filter(item => item.pagina === pageNumber);
+      configs.forEach((cfg, i) => {
+        const f = document.createElement('iframe');
+        f.className = 'overlay-iframe';
+        f.title = `Conteúdo interativo ${i+1}`;
+        f.allowFullscreen = true;
+        f.setAttribute('frameborder', '0');
+        f.setAttribute('allowtransparency', 'true');
+        f.setAttribute('loading', 'lazy');
+        // Permissões para autoplay quando permitido pelo gesto
+        f.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; encrypted-media');
+
+        // posicionamento responsivo
+        f.style.left = toCssUnit(cfg.posicaoX);
+        f.style.top = toCssUnit(cfg.posicaoY);
+        f.style.width = toCssUnit(cfg.largura);
+        f.style.height = toCssUnit(cfg.altura);
+
+        // Só define o SRC se já houve gesto do usuário
+        if (userActivated) {
+          f.src = cfg.link;
+        } else {
+          f.dataset.src = cfg.link; // guarda para ativar depois
+        }
+
+        f.style.display = 'block';
+        viewer.appendChild(f);
+      });
+    }
+
+    // Calcula o maior tamanho quadrado que cabe tanto na largura quanto na altura disponíveis
+    function resizeViewer() {
+      const header = document.querySelector('header');
+      const controls = document.querySelector('.controls');
+      const card = document.querySelector('.card');
+      const wrap = document.querySelector('.wrap');
+
+      const vw = Math.min(1100, window.innerWidth * 0.92);
+
+      const wrapStyles = getComputedStyle(wrap);
+      const wrapPad = parseFloat(wrapStyles.paddingTop) + parseFloat(wrapStyles.paddingBottom);
+
+      const cardStyles = getComputedStyle(card);
+      const cardPad = parseFloat(cardStyles.paddingTop) + parseFloat(cardStyles.paddingBottom);
+
+      const safety = 40; // folga para bordas/margens
+      const availableH = window.innerHeight - header.offsetHeight - controls.offsetHeight - wrapPad - cardPad - safety;
+
+      const side = Math.max(220, Math.min(vw, availableH));
+      viewer.style.width = side + 'px';
+      viewer.style.height = side + 'px';
+    }
 
     function render() {
       img.src = IMAGENS[index];
@@ -168,29 +267,114 @@
       prevBtn.disabled = index === 0;
       nextBtn.disabled = index === IMAGENS.length - 1;
 
-      // controla exibição e posição do iframe
-      iframe.style.display = "none";
-      iframe.classList.remove('quadrante-1', 'quadrante-3');
-
-      if (index === 1) {             // segunda imagem
-        iframe.style.display = "block";
-        iframe.classList.add('quadrante-1');
-      } else if (index === IMAGENS.length - 1) { // última imagem
-        iframe.style.display = "block";
-        iframe.classList.add('quadrante-3');
-      }
+      // iframes por página (dinâmicos via config)
+      clearOverlays();
+      addOverlaysForPage(index + 1);
+      applyIframeVisibility(true);
     }
 
-    function next() { if (index < IMAGENS.length - 1) { index++; render(); } }
-    function prev() { if (index > 0) { index--; render(); } }
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function createFlip(currentSrc, targetSrc, direction) {
+      const flip = document.createElement('div');
+      flip.className = `flip ${direction}`;
+      const sheet = document.createElement('div');
+      sheet.className = 'sheet';
+      const front = document.createElement('div');
+      front.className = 'side front';
+      const back = document.createElement('div');
+      back.className = 'side back';
+
+      if (direction === 'prev') {
+        back.style.backgroundImage  = `url("${currentSrc}")`;
+        front.style.backgroundImage = `url("${targetSrc}")`;
+      } else {
+        front.style.backgroundImage = `url("${currentSrc}")`;
+        back.style.backgroundImage  = `url("${targetSrc}")`;
+      }
+
+      sheet.appendChild(front);
+      sheet.appendChild(back);
+      flip.appendChild(sheet);
+      return flip;
+    }
+
+    function flipTo(newIndex, dir) {
+      if (flipping) return;
+      if (newIndex < 0 || newIndex > IMAGENS.length - 1) return;
+
+      if (prefersReduced) {
+        index = newIndex;
+        render();
+        return;
+      }
+
+      flipping = true;
+
+      const currentSrc = IMAGENS[index];
+      const targetSrc  = IMAGENS[newIndex];
+
+      // Evita engasgo dos iframes durante o flip
+      applyIframeVisibility(false);
+
+      const flip = createFlip(currentSrc, targetSrc, dir);
+      viewer.appendChild(flip);
+
+      if (dir === 'next') {
+        index = newIndex; render();
+      }
+
+      const done = () => {
+        flip.removeEventListener('animationend', done);
+        flip.remove();
+        if (dir === 'prev') { index = newIndex; render(); }
+        flipping = false;
+        applyIframeVisibility(true);
+      };
+      flip.addEventListener('animationend', done);
+    }
+
+    function next() { if (index < IMAGENS.length - 1) flipTo(index + 1, 'next'); }
+    function prev() { if (index > 0) flipTo(index - 1, 'prev'); }
 
     nextBtn.addEventListener('click', next);
     prevBtn.addEventListener('click', prev);
+
+    // Qualquer gesto do usuário ativa a mídia (carrega SRCs e libera autoplay permitido)
+    function onUserGesture() {
+      if (userActivated) return; // já ativado
+      userActivated = true;
+      // ativa iframes já injetados
+      viewer.querySelectorAll('.overlay-iframe').forEach(f => {
+        if (!f.src && f.dataset.src) f.src = f.dataset.src;
+      });
+    }
+
+    // Captura o primeiro gesto do usuário (antes de outros handlers)
+    window.addEventListener('pointerdown', onUserGesture, { once: true, capture: true });
+    window.addEventListener('keydown', onUserGesture, { once: true, capture: true });
+
+    // Navegação por teclas
     window.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight') next();
       if (e.key === 'ArrowLeft') prev();
     });
 
+    // clique nos lados do viewer (também vai disparar pointerdown -> ativa mídia)
+    viewer.addEventListener('click', (e) => {
+      const rect = viewer.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      if (x > rect.width * 0.6) next();
+      else if (x < rect.width * 0.4) prev();
+    });
+
+    // Responsividade
+    window.addEventListener('resize', resizeViewer);
+    window.addEventListener('orientationchange', resizeViewer);
+    window.addEventListener('load', () => { resizeViewer(); render(); });
+
+    // fallback imediato (antes do load)
+    resizeViewer();
     render();
   </script>
 </body>
