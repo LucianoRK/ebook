@@ -53,21 +53,26 @@
       position: relative;
       width: 100%;
       height: 100%;
-      background: transparent; /* mantém transparente */
-      overflow: visible;        /* deixa a sombra aparecer */
-      border-radius: 10px;      /* opcional: cantos arredondados */
+      background: transparent;
+      /* mantém transparente */
+      overflow: visible;
+      /* deixa a sombra aparecer */
+      border-radius: 10px;
+      /* opcional: cantos arredondados */
     }
 
     /* sombra externa suave */
     .page::before {
       content: "";
       position: absolute;
-      inset: 0;                 /* cobre toda a página */
+      inset: 0;
+      /* cobre toda a página */
       border-radius: inherit;
       box-shadow:
         0 14px 34px rgba(0, 0, 0, .18),
         0 3px 10px rgba(0, 0, 0, .12);
-      pointer-events: none;     /* não bloqueia cliques/viradas */
+      pointer-events: none;
+      /* não bloqueia cliques/viradas */
       z-index: 1;
     }
 
@@ -148,8 +153,10 @@
       outline: none;
       border: 0;
       background: transparent;
-      z-index: 5;   /* acima da imagem da página */
-      pointer-events: auto; /* garante captação do clique */
+      z-index: 5;
+      /* acima da imagem da página */
+      pointer-events: auto;
+      /* garante captação do clique */
     }
 
     .hotspot-play:focus-visible {
@@ -176,14 +183,22 @@
     <div class="page"><img src="./image/2.jpg" alt="Página 2"></div>
     <div class="page"><img src="./image/3.jpg" alt="Página 3"></div>
     <div class="page"><img src="./image/4.jpg" alt="Página 4"></div>
-    <div class="page"><img src="./image/5.jpg" alt="Página 5"></div>
-    <div class="page"><img src="./image/6.jpg" alt="Página 6"></div>
+    <div class="page">
+      <img src="./image/5.jpg" alt="Página 5">
+      <button class="hotspot-play" aria-label="Assistir ao vídeo"
+        data-video="https://scratch.mit.edu/projects/1212995699/embed" style="left: 12%; top: 75%; width: 18%;">
+      </button>
+    </div>
+    <div class="page">
+      <img src="./image/6.jpg" alt="Página 6">
+      <button class="hotspot-play" aria-label="Assistir ao vídeo"
+        data-video="https://scratch.mit.edu/projects/1212868708/embed" style="left: 64%; top: 75%; width: 18%;">
+      </button>
+    </div>
     <div class="page"><img src="./image/7.jpg" alt="Página 7"><a href="sss">aaaa</a></div>
 
-    <!-- PÁGINA 8 COM HOTSPOT DE PLAY -->
     <div class="page">
       <img src="./image/8.jpg" alt="Página 8">
-      <!-- Troque o data-video pelo seu link/ID do YouTube -->
       <button class="hotspot-play" aria-label="Assistir ao vídeo" data-video="https://www.youtube.com/embed/KiDXiaN6Q1Y"
         style="left: 58%; top: 70%; width: 22%;"></button>
     </div>
@@ -197,9 +212,12 @@
 
     <div class="page">
       <img src="./image/15.jpg" alt="Página 15">
-      <!-- Ajuste left/top/width conforme onde está o ícone de play na sua arte -->
       <button class="hotspot-play" aria-label="Assistir ao vídeo (página 15)"
-        data-video="https://www.youtube.com/embed/s8DmKUQ-m2E" style="left: 42%; top: 73%; width: 22%;"></button>
+        data-video="https://www.youtube.com/embed/s8DmKUQ-m2E" style="left: 42%; top: 73%; width: 22%;">
+      </button>
+      <button class="hotspot-play" aria-label="jogar (página 15)"
+        data-video="https://scratch.mit.edu/projects/1212987185/embed" style="left: 70%; top: 75%; width: 18%;">
+      </button>
     </div>
 
     <div class="page"><img src="./image/16.jpg" alt="Página 16"></div>
@@ -230,13 +248,11 @@
       var $book = $('#flipbook');
       var flipSound = document.getElementById('flip-sound');
 
-      // Flag para saber se já houve interação do usuário
       var audioUnlocked = false;
 
       function unlockAudioOnce() {
         if (audioUnlocked) return;
-        // Tenta tocar rapidamente para "registrar" a permissão
-        flipSound.muted = true;           // autoplay de áudio mudo costuma ser permitido
+        flipSound.muted = true;
         flipSound.play().then(function () {
           flipSound.pause();
           flipSound.currentTime = 0;
@@ -273,9 +289,9 @@
         }
       });
 
-      // Clique para virar (ignora cliques vindos do hotspot)
+      // Clique para virar 
       $book.on('click', function (e) {
-        if ($(e.target).closest('.hotspot-play').length) return; // não vira se clicou no hotspot
+        if ($(e.target).closest('.hotspot-play').length) return;
         var pos = e.pageX - $book.offset().left;
         if (pos < $book.width() / 2) $book.turn('previous');
         else $book.turn('next');
@@ -305,7 +321,7 @@
 
         $iframe.attr('src', url.toString());
         $modal.addClass('open').attr('aria-hidden', 'false');
-        // pausa som de virada enquanto o vídeo toca (opcional)
+        // pausa som de virada enquanto o vídeo toca
         flipSound.pause();
       }
 
