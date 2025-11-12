@@ -115,7 +115,7 @@
     <div class="page"><img src="./image/4.jpg" alt="Página 4"></div>
     <div class="page"><img src="./image/5.jpg" alt="Página 5"></div>
     <div class="page"><img src="./image/6.jpg" alt="Página 6"></div>
-    <div class="page"><img src="./image/7.jpg" alt="Página 7"></div>
+    <div class="page"><img src="./image/7.jpg" alt="Página 7"><a href="sss">aaaa</a></div>
     <div class="page"><img src="./image/8.jpg" alt="Página 8"></div>
     <div class="page"><img src="./image/9.jpg" alt="Página 9"></div>
     <div class="page"><img src="./image/10.jpg" alt="Página 10"></div>
@@ -124,19 +124,49 @@
     <div class="page"><img src="./image/13.jpg" alt="Página 13"></div>
     <div class="page"><img src="./image/14.jpg" alt="Página 14"></div>
     <div class="page"><img src="./image/15.jpg" alt="Página 15"></div>
+    <div class="page"><img src="./image/16.jpg" alt="Página 16"></div>
+    <div class="page"><img src="./image/17.jpg" alt="Página 17"></div>
+    <div class="page"><img src="./image/18.jpg" alt="Página 18"></div>
+    <div class="page"><img src="./image/default.jpg" alt="Página 18"></div>
 
     <!-- CONTRA-CAPA -->
     <div class="page hard">
-      <img src="./image/16.jpg" alt="Página 16">
+      <img src="./image/19.jpg" alt="Página 16">
     </div>
   </div>
 
-  <audio id="flip-sound" src="audio/page-flip.mp3" preload="auto"></audio>
+  <audio id="flip-sound" src="audio/page-flip.mp3" preload="auto" playsinline></audio>
 
   <script>
     jQuery(function ($) {
       var $book = $('#flipbook');
       var flipSound = document.getElementById('flip-sound');
+
+      // Flag para saber se já houve interação do usuário
+      var audioUnlocked = false;
+
+      function unlockAudioOnce() {
+        if (audioUnlocked) return;
+        // Tenta tocar rapidamente para "registrar" a permissão
+        flipSound.muted = true;           // autoplay de áudio mudo costuma ser permitido
+        flipSound.play().then(function () {
+          flipSound.pause();
+          flipSound.currentTime = 0;
+          flipSound.muted = false;
+          audioUnlocked = true;
+        }).catch(function () { /* ignora */ });
+        // Remove os listeners depois da primeira tentativa
+        window.removeEventListener('click', unlockAudioOnce);
+        window.removeEventListener('keydown', unlockAudioOnce);
+        window.removeEventListener('touchstart', unlockAudioOnce, { passive: true });
+        window.removeEventListener('pointerdown', unlockAudioOnce);
+      }
+
+      // Desbloqueia áudio na primeira interação (desktop e mobile)
+      window.addEventListener('click', unlockAudioOnce);
+      window.addEventListener('keydown', unlockAudioOnce);
+      window.addEventListener('touchstart', unlockAudioOnce, { passive: true });
+      window.addEventListener('pointerdown', unlockAudioOnce);
 
       $book.turn({
         width: $book.width(),
@@ -145,16 +175,17 @@
         autoCenter: true,
         gradients: true,
         acceleration: true,
-
         when: {
           turning: function () {
-            flipSound.currentTime = 0; // reinicia o som caso vire rápido
-            flipSound.play();
+            // Só toca se já houve interação do usuário
+            if (!audioUnlocked) return;
+            flipSound.currentTime = 0;
+            flipSound.play().catch(function () { /* evita erro no console */ });
           }
         }
       });
 
-      // Clique para virar0
+      // Clique para virar
       $book.on('click', function (e) {
         var pos = e.pageX - $book.offset().left;
         if (pos < $book.width() / 2) $book.turn('previous');
