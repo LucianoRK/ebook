@@ -157,11 +157,103 @@
       /* acima da imagem da página */
       pointer-events: auto;
       /* garante captação do clique */
+      font-family: "Comic Sans MS", "Comic Sans", cursive;
     }
 
     .hotspot-play:focus-visible {
       box-shadow: 0 0 0 3px rgba(0, 165, 255, .75);
       border-radius: 50%;
+    }
+
+    /* -------- QUIZ (páginas 12 e 13) -------- */
+    .quiz-overlay {
+      position: absolute;
+      inset: 3%;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-radius: 16px;
+      padding: 16px 18px;
+      overflow-y: auto; /* só aparece scroll se realmente precisar */
+    }
+
+    .quiz-title {
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .quiz-subtitle {
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    .quiz-question__text {
+      font-weight: 600;
+    }
+
+    .quiz-options {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .quiz-option {
+      text-align: left;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: transparent;
+      background: #dadec9;
+      cursor: pointer;
+    }
+
+    .quiz-option:hover {
+      filter: brightness(0.98);
+    }
+
+    .quiz-option.is-correct {
+      border-color: #1b8f4b;
+      background: rgba(27, 143, 75, 0.08);
+    }
+
+    .quiz-option.is-incorrect {
+      border-color: #c62828;
+      background: rgba(198, 40, 40, 0.06);
+    }
+
+    .quiz-feedback {
+      margin-top: 2px;
+    }
+
+    .quiz-feedback[data-status="correct"] {
+      color: #1b8f4b;
+      font-weight: 600;
+    }
+
+    .quiz-feedback[data-status="incorrect"] {
+      color: #c62828;
+      font-weight: 500;
+    }
+
+    /* >>> Comic Sans, 14px e MAIÚSCULO em todo o formulário/quiz <<< */
+    .quiz-overlay,
+    .quiz-overlay * {
+      font-family: "Comic Sans MS", "Comic Sans", cursive;
+      font-size: 14px;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    @media (max-width: 900px) {
+      .quiz-overlay {
+        inset: 2%;
+        padding: 10px 10px;
+      }
+
+      .quiz-option {
+        padding: 5px 6px;
+      }
     }
   </style>
 
@@ -183,19 +275,25 @@
     <div class="page"><img src="./image/2.jpg" alt="Página 2"></div>
     <div class="page"><img src="./image/3.jpg" alt="Página 3"></div>
     <div class="page"><img src="./image/4.jpg" alt="Página 4"></div>
+
     <div class="page">
       <img src="./image/5.jpg" alt="Página 5">
       <button class="hotspot-play" aria-label="Assistir ao vídeo"
         data-video="https://scratch.mit.edu/projects/1212995699/embed" style="left: 12%; top: 75%; width: 18%;">
       </button>
     </div>
+
     <div class="page">
       <img src="./image/6.jpg" alt="Página 6">
       <button class="hotspot-play" aria-label="Assistir ao vídeo"
         data-video="https://scratch.mit.edu/projects/1212868708/embed" style="left: 64%; top: 75%; width: 18%;">
       </button>
     </div>
-    <div class="page"><img src="./image/7.jpg" alt="Página 7"><a href="sss">aaaa</a></div>
+
+    <div class="page">
+      <img src="./image/7.jpg" alt="Página 7">
+      <a href="sss">aaaa</a>
+    </div>
 
     <div class="page">
       <img src="./image/8.jpg" alt="Página 8">
@@ -206,8 +304,133 @@
     <div class="page"><img src="./image/9.jpg" alt="Página 9"></div>
     <div class="page"><img src="./image/10.jpg" alt="Página 10"></div>
     <div class="page"><img src="./image/11.jpg" alt="Página 11"></div>
-    <div class="page"><img src="./image/12.jpg" alt="Página 12"></div>
-    <div class="page"><img src="./image/13.jpg" alt="Página 13"></div>
+
+    <!-- PÁGINA 12 - QUIZ (Perguntas 1, 2 e 3) -->
+    <div class="page">
+      <img src="./image/default.jpg" alt="Página 12 - Quiz 1 a 3">
+      <div class="quiz-overlay quiz-interactive">
+        <!-- PERGUNTA 1 -->
+        <div class="quiz-question" data-question="1">
+          <p class="quiz-question__text">
+            1. O que acontece quando as florestas costeiras são destruídas?
+          </p>
+          <div class="quiz-options">
+            <button class="quiz-option quiz-interactive" type="button" data-letter="a" data-correct="false"
+              data-feedback="As praias até podem parecer mais 'limpas' sem vegetação, mas na verdade ficam mais vulneráveis à erosão. As plantas são protetoras naturais da costa!">
+              a) As praias ficam mais limpas e seguras, porque a vegetação deixa de acumular lixo.
+            </button>
+            <button class="quiz-option quiz-interactive" type="button" data-letter="b" data-correct="true"
+              data-feedback="Exatamente! Sem as raízes das árvores para segurar o solo, o vento e as ondas levam a areia embora, causando erosão e fazendo o mar avançar sobre a terra.">
+              b) O vento e as ondas levam a areia embora sem as raízes das árvores, causando erosão e fazendo o mar
+              avançar sobre a terra.
+            </button>
+            <button class="quiz-option quiz-interactive" type="button" data-letter="c" data-correct="false"
+              data-feedback="Os peixes até podem ser coloridos, mas a destruição das florestas costeiras afeta seus habitats e a qualidade da água, ameaçando sua sobrevivência.">
+              c) A única diferença é que os peixes ficam mais coloridos e o mar mais bonito.
+            </button>
+          </div>
+          <p class="quiz-feedback" aria-live="polite"></p>
+        </div>
+
+        <!-- PERGUNTA 2 -->
+        <div class="quiz-question" data-question="2">
+          <p class="quiz-question__text">
+            2. Na Guiné-Bissau, a subida do nível do mar está a:
+          </p>
+          <div class="quiz-options">
+            <button class="quiz-option quiz-interactive" type="button" data-letter="a" data-correct="false"
+              data-feedback="Na verdade, o turismo sofre quando as praias desaparecem e as comunidades locais perdem suas casas para o avanço do mar.">
+              a) Aumentar o turismo e atrair mais visitantes para as praias.
+            </button>
+            <button class="quiz-option quiz-interactive" type="button" data-letter="b" data-correct="true"
+              data-feedback="Correto! A água salgada invade os campos de arroz e contamina os poços de água doce, tornando a terra imprópria para agricultura e afetando toda a comunidade.">
+              b) Invadir os campos de arroz e contaminar os poços de água doce, prejudicando a agricultura e a vida das
+              pessoas.
+            </button>
+            <button class="quiz-option quiz-interactive" type="button" data-letter="c" data-correct="false"
+              data-feedback="A areia até pode mudar, mas o problema real é que as pessoas perdem suas terras e meios de subsistência para o mar.">
+              c) Apenas mudar a cor da areia e das praias, sem grandes impactos para a comunidade.
+            </button>
+          </div>
+          <p class="quiz-feedback" aria-live="polite"></p>
+        </div>
+
+        <!-- PERGUNTA 3 -->
+        <div class="quiz-question" data-question="3">
+          <p class="quiz-question__text">
+            3. Proteger Cabo Verde, Portugal e Guiné-Bissau ao mesmo tempo é importante porque:
+          </p>
+          <div class="quiz-options">
+            <button class="quiz-option quiz-interactive" type="button" data-letter="a" data-correct="false"
+              data-feedback="A língua em comum pode ajudar na comunicação, mas a verdadeira conexão está nos ecossistemas que compartilhamos.">
+              a) Todos falam a mesma língua, e isso é o mais importante para o meio ambiente.
+            </button>
+            <button class="quiz-option quiz-interactive" type="button" data-letter="b" data-correct="true"
+              data-feedback="Perfeito! Tartarugas, aves migratórias e correntes marinhas conectam esses lugares. O que afeta um, acaba afetando todos os outros!">
+              b) Tartarugas, aves migratórias e correntes marinhas conectam esses lugares, então o que acontece em um
+              afeta os outros.
+            </button>
+            <button class="quiz-option quiz-interactive" type="button" data-letter="c" data-correct="false"
+              data-feedback="Viajar é bom, mas a importância vai além do turismo - trata-se de proteger um sistema ambiental que nos sustenta a todos.">
+              c) Facilita o turismo e as viagens entre esses países, e isso é o principal objetivo.
+            </button>
+          </div>
+          <p class="quiz-feedback" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PÁGINA 13 - QUIZ (Perguntas 4 e 5) -->
+    <div class="page">
+      <img src="./image/default.jpg" alt="Página 13 - Quiz 4 e 5">
+      <div class="quiz-overlay quiz-interactive">
+        <!-- PERGUNTA 4 -->
+        <div class="quiz-question" data-question="4">
+          <p class="quiz-question__text">
+            4. Qual destas ações <strong>NÃO</strong> ajuda a proteger as zonas costeiras?
+          </p>
+          <div class="quiz-options">
+            <button class="quiz-option quiz-interactive" type="button" data-letter="a" data-correct="false"
+              data-feedback="Essa é uma ótima ação! Plantar vegetação nativa nas dunas ajuda a segurar a areia e proteger a costa.">
+              a) Plantar vegetação nativa nas dunas.
+            </button>
+            <button class="quiz-option quiz-interactive" type="button" data-letter="b" data-correct="false"
+              data-feedback="Excelente escolha! Menos lixo plástico significa oceanos mais saudáveis e praias mais seguras para todos os seres vivos.">
+              b) Reduzir o lixo plástico nas praias e no mar.
+            </button>
+            <button class="quiz-option quiz-interactive" type="button" data-letter="c" data-correct="true"
+              data-feedback="Isso mesmo! Construir à beira-mar destrói dunas, impede a reprodução de animais e acelera a erosão costeira.">
+              c) Construir casas e hotéis bem em cima da faixa de areia, bem pertinho do mar.
+            </button>
+          </div>
+          <p class="quiz-feedback" aria-live="polite"></p>
+        </div>
+
+        <!-- PERGUNTA 5 -->
+        <div class="quiz-question" data-question="5">
+          <p class="quiz-question__text">
+            5. Como o desmatamento na Amazônia pode afetar as praias da Guiné-Bissau?
+          </p>
+          <div class="quiz-options">
+            <button class="quiz-option quiz-interactive" type="button" data-letter="a" data-correct="false"
+              data-feedback="Parecem distantes, mas estão conectados pelo clima global! O que acontece num canto do planeta afeta todos os outros.">
+              a) Não afeta, porque a Amazônia fica na América do Sul e a Guiné-Bissau fica na África.
+            </button>
+            <button class="quiz-option quiz-interactive" type="button" data-letter="b" data-correct="true"
+              data-feedback="Exatamente! A Amazônia regula as chuvas e o clima do mundo todo. Sem ela, o aquecimento global acelera, o gelo derrete e o nível do mar sobe, afetando países costeiros como a Guiné-Bissau.">
+              b) Acelerando o aquecimento global, derretendo geleiras e fazendo o nível do mar subir, o que ameaça países
+              costeiros como a Guiné-Bissau.
+            </button>
+            <button class="quiz-option quiz-interactive" type="button" data-letter="c" data-correct="false"
+              data-feedback="As árvores não viajam pelo oceano, mas suas funções climáticas sim! A Amazônia influencia padrões de chuva e temperatura em todo o mundo.">
+              c) Mandando troncos e árvores boiando pela água até chegarem às praias da Guiné-Bissau.
+            </button>
+          </div>
+          <p class="quiz-feedback" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+
     <div class="page"><img src="./image/14.jpg" alt="Página 14"></div>
 
     <div class="page">
@@ -291,7 +514,9 @@
 
       // Clique para virar 
       $book.on('click', function (e) {
-        if ($(e.target).closest('.hotspot-play').length) return;
+        // NÃO vira página se clicar em hotspot de vídeo ou na área interativa do quiz
+        if ($(e.target).closest('.hotspot-play, .quiz-interactive').length) return;
+
         var pos = e.pageX - $book.offset().left;
         if (pos < $book.width() / 2) $book.turn('previous');
         else $book.turn('next');
@@ -330,7 +555,7 @@
         $iframe.attr('src', '');
       }
 
-      // Bloqueia virar página por eventos de down/up em qualquer dispositivo
+      // Bloqueia virar página por eventos de down/up em qualquer dispositivo (hotspot de vídeo)
       $(document).on('pointerdown pointerup touchstart touchend mousedown mouseup', '.hotspot-play', function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -369,6 +594,31 @@
       // Se a página virar, fecha a modal (evita vídeo tocando por trás)
       $book.bind('turning', function () {
         if ($modal.hasClass('open')) closeVideoModal();
+      });
+
+      /* ------- LÓGICA DO QUIZ ------- */
+      $(document).on('click', '.quiz-option', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var $btn = $(this);
+        var $question = $btn.closest('.quiz-question');
+
+        // limpa seleção anterior
+        $question.find('.quiz-option')
+          .removeClass('is-correct is-incorrect');
+
+        var isCorrect = String($btn.data('correct')) === 'true';
+        var feedbackText = $btn.data('feedback') || '';
+        var $feedback = $question.find('.quiz-feedback');
+
+        // aplica estilo
+        $btn.addClass(isCorrect ? 'is-correct' : 'is-incorrect');
+
+        // mostra feedback
+        $feedback
+          .text(feedbackText)
+          .attr('data-status', isCorrect ? 'correct' : 'incorrect');
       });
     });
   </script>
