@@ -175,7 +175,8 @@
       gap: 8px;
       border-radius: 16px;
       padding: 16px 18px;
-      overflow-y: auto; /* só aparece scroll se realmente precisar */
+      overflow-y: auto;
+      /* só aparece scroll se realmente precisar */
     }
 
     .quiz-title {
@@ -210,6 +211,11 @@
 
     .quiz-option:hover {
       filter: brightness(0.98);
+    }
+
+    /* estado de selecionado (antes de mostrar certo/errado) */
+    .quiz-option.is-selected {
+      outline: 2px dashed rgba(0, 0, 0, 0.4);
     }
 
     .quiz-option.is-correct {
@@ -456,11 +462,11 @@
 
   <audio id="flip-sound" src="audio/page-flip.mp3" preload="auto" playsinline></audio>
 
-  <!-- Modal de vídeo YouTube -->
+  <!-- Modal de vídeo -->
   <div class="video-modal" id="videoModal" aria-hidden="true" role="dialog">
     <div class="video-modal__content" role="document">
       <button class="video-modal__close" type="button" aria-label="Fechar">✕</button>
-      <iframe id="videoFrame" src="" title="YouTube video"
+      <iframe id="videoFrame" src="" title="Vídeo"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowfullscreen></iframe>
     </div>
@@ -539,14 +545,12 @@
       var $iframe = $('#videoFrame');
 
       function openVideoModal(videoUrl) {
-        // garante autoplay e remove params repetidos
         var url = new URL(videoUrl, window.location.href);
         if (!url.searchParams.has('autoplay')) url.searchParams.set('autoplay', '1');
         if (!url.searchParams.has('rel')) url.searchParams.set('rel', '0');
 
         $iframe.attr('src', url.toString());
         $modal.addClass('open').attr('aria-hidden', 'false');
-        // pausa som de virada enquanto o vídeo toca
         flipSound.pause();
       }
 
@@ -555,7 +559,6 @@
         $iframe.attr('src', '');
       }
 
-      // Bloqueia virar página por eventos de down/up em qualquer dispositivo (hotspot de vídeo)
       $(document).on('pointerdown pointerup touchstart touchend mousedown mouseup', '.hotspot-play', function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -563,7 +566,6 @@
         return false;
       });
 
-      // Clique no hotspot: abre modal e NÃO vira página
       $(document).on('click', '.hotspot-play', function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -573,30 +575,26 @@
         return false;
       });
 
-      // Fechar clicando fora do vídeo
       $modal.on('click', function (e) {
         if (e.target === this) closeVideoModal();
       });
 
-      // Botão fechar
       $modal.find('.video-modal__close').on('click', function (e) {
         e.stopPropagation();
         closeVideoModal();
       });
 
-      // Esc fecha
       $(document).on('keydown', function (e) {
         if (e.key === 'Escape' && $modal.hasClass('open')) {
           closeVideoModal();
         }
       });
 
-      // Se a página virar, fecha a modal (evita vídeo tocando por trás)
       $book.bind('turning', function () {
         if ($modal.hasClass('open')) closeVideoModal();
       });
 
-      /* ------- LÓGICA DO QUIZ ------- */
+      /* ------- LÓGICA DO QUIZ (5 perguntas no total) ------- */
       $(document).on('click', '.quiz-option', function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -604,21 +602,46 @@
         var $btn = $(this);
         var $question = $btn.closest('.quiz-question');
 
-        // limpa seleção anterior
+        // Marca alternativa escolhida (apenas selecionada por enquanto)
         $question.find('.quiz-option')
-          .removeClass('is-correct is-incorrect');
+          .removeClass('is-selected is-correct is-incorrect');
+        $btn.addClass('is-selected');
 
-        var isCorrect = String($btn.data('correct')) === 'true';
-        var feedbackText = $btn.data('feedback') || '';
-        var $feedback = $question.find('.quiz-feedback');
+        // Limpa feedback dessa questão (até todas serem respondidas)
+        $question.find('.quiz-feedback')
+          .text('')
+          .removeAttr('data-status');
 
-        // aplica estilo
-        $btn.addClass(isCorrect ? 'is-correct' : 'is-incorrect');
+        // Verifica globalmente (todas as 5 perguntas)
+        var totalQuestions = $('.quiz-question').length; // deve ser 5
+        var answeredQuestions = $('.quiz-question').filter(function () {
+          return $(this).find('.quiz-option.is-selected').length > 0;
+        }).length;
 
-        // mostra feedback
-        $feedback
-          .text(feedbackText)
-          .attr('data-status', isCorrect ? 'correct' : 'incorrect');
+        // Se ainda não respondeu TODAS, não mostra nada
+        if (answeredQuestions !== totalQuestions) {
+          return;
+        }
+
+        // Todas respondidas: agora mostra certo/errado e feedback de cada uma
+        $('.quiz-question').each(function () {
+          var $q = $(this);
+          var $selected = $q.find('.quiz-option.is-selected');
+          if (!$selected.length) return;
+
+          var isCorrect = String($selected.data('correct')) === 'true';
+          var feedbackText = $selected.data('feedback') || '';
+          var $feedback = $q.find('.quiz-feedback');
+
+          // Aplica classes finais
+          $q.find('.quiz-option').removeClass('is-correct is-incorrect');
+          $selected.addClass(isCorrect ? 'is-correct' : 'is-incorrect');
+
+          // Mostra texto de feedback
+          $feedback
+            .text(feedbackText)
+            .attr('data-status', isCorrect ? 'correct' : 'incorrect');
+        });
       });
     });
   </script>
