@@ -283,6 +283,67 @@
       line-height: 1.2;
     }
 
+    /* -------- LINKS (Página 17) -------- */
+    .links-overlay {
+      position: absolute;
+      inset: 8%;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      border-radius: 16px;
+      padding: 16px 18px;
+      text-align: center;
+    }
+
+    .links-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .links-subtitle {
+      margin-bottom: 8px;
+    }
+
+    .links-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .links-button {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 0;
+      text-decoration: none;
+      text-align: center;
+      background: #a9f285;
+      color: #000;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, .25);
+      cursor: pointer;
+      min-width: 60%;
+      max-width: 90%;
+      margin-bottom: 20px;
+    }
+
+    .links-button:hover {
+      filter: brightness(0.97);
+    }
+
+    /* fontes da área de links iguais ao formulário/quiz */
+    .links-overlay,
+    .links-overlay * {
+      font-family: "Comic Sans MS", "Comic Sans", cursive;
+      font-size: 14px;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
     @media (max-width: 900px) {
       .quiz-overlay {
         inset: 2%;
@@ -295,6 +356,15 @@
 
       .quiz-control-button {
         margin-top: 18px;
+      }
+
+      .links-overlay {
+        inset: 4%;
+        padding: 10px 12px;
+      }
+
+      .links-button {
+        min-width: 80%;
       }
     }
   </style>
@@ -487,7 +557,59 @@
     </div>
 
     <div class="page"><img src="./image/16.jpg" alt="Página 16"></div>
-    <div class="page"><img src="./image/17.jpg" alt="Página 17"></div>
+
+    <!-- PÁGINA 17 - LINKS / RECURSOS -->
+    <div class="page">
+      <img src="./image/default.jpg" alt="Página 17 - Links">
+      <div class="links-overlay links-interactive">
+        <div class="links-title">LINKS ÚTEIS</div>
+
+        <div class="links-list">
+          <a class="links-button" href="https://forms.gle/XWdKWS31idudunFC9" target="_blank" rel="noopener noreferrer">
+            AVALIE O E-BOOK
+          </a>
+
+          <a class="links-button" href="https://portalold.ipb.pt/index.php/pt/guiaects/cursos/mestrados/curso?cod_escola=3042&cod_curso=5079"
+            target="_blank" rel="noopener noreferrer">
+            MESTRADO IPB
+          </a>
+
+          <a class="links-button" href="https://www.utfpr.edu.br/cursos/programas-de-pos-graduacao/ppgect-pg"
+            target="_blank" rel="noopener noreferrer">
+            MESTRADO UTFPR
+          </a>
+
+          <a class="links-button" href="https://www.tamar.org.br/interna.php?cod=112" target="_blank"
+            rel="noopener noreferrer">
+            PROJETO TAMAR NO BRASIL
+          </a>
+
+          <a class="links-button" href="https://www.projectbiodiversity.org/pt" target="_blank"
+            rel="noopener noreferrer">
+            PROJETO BIODIVERSITY EM CABO VERDE
+          </a>
+
+          <a class="links-button" href="https://apambiente.pt/" target="_blank" rel="noopener noreferrer">
+            POLÍTICAS AMBIENTAIS EM PORTUGAL
+          </a>
+
+          <a class="links-button" href="https://ministerioambiente.gw/ministerio/" target="_blank"
+            rel="noopener noreferrer">
+            POLÍTICAS AMBIENTAIS NA GUINÉ-BISSAU
+          </a>
+
+          <a class="links-button" href="https://www.gov.br/mma/pt-br" target="_blank" rel="noopener noreferrer">
+            POLÍTICAS AMBIENTAIS NO BRASIL
+          </a>
+
+          <a class="links-button" href="https://maa.gov.cv/index.php/min-a-a/61-estrutura-organica/outras-estruturas"
+            target="_blank" rel="noopener noreferrer">
+            POLÍTICAS AMBIENTAIS EM CABO VERDE
+          </a>
+        </div>
+      </div>
+    </div>
+
     <div class="page"><img src="./image/18.jpg" alt="Página 18"></div>
     <div class="page"><img src="./image/default.jpg" alt="Página default"></div>
 
@@ -598,8 +720,8 @@
 
       // Clique para virar 
       $book.on('click', function (e) {
-        // NÃO vira página se clicar em hotspot de vídeo ou na área interativa do quiz
-        if ($(e.target).closest('.hotspot-play, .quiz-interactive').length) return;
+        // NÃO vira página se clicar em hotspot de vídeo, na área interativa do quiz ou nos links
+        if ($(e.target).closest('.hotspot-play, .quiz-interactive, .links-interactive').length) return;
 
         // ENQUANTO ESTIVER RESPONDENDO O FORMULÁRIO (QUIZ), NÃO VIRA PÁGINA
         if (isQuizViewLocked()) return;
