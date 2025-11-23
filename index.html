@@ -242,6 +242,38 @@
       font-weight: 500;
     }
 
+    /* Botões PROSSEGUIR / TENTAR NOVAMENTE */
+    .quiz-control-button {
+      margin-top: 35%;
+      align-self: flex-end;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 0;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, .25);
+    }
+
+    /* PROSSEGUIR (verde) */
+    .quiz-control-button.quiz-next {
+      background: #1b8f4b;
+      color: #fff;
+    }
+
+    .quiz-control-button.quiz-next:hover {
+      filter: brightness(0.97);
+    }
+
+    /* TENTAR NOVAMENTE (vermelho claro) */
+    .quiz-control-button.quiz-retry {
+      background: #f28b82;
+      /* vermelho claro */
+      color: #fff;
+    }
+
+    .quiz-control-button.quiz-retry:hover {
+      filter: brightness(0.97);
+    }
+
     /* >>> Comic Sans, 14px e MAIÚSCULO em todo o formulário/quiz <<< */
     .quiz-overlay,
     .quiz-overlay * {
@@ -259,6 +291,10 @@
 
       .quiz-option {
         padding: 5px 6px;
+      }
+
+      .quiz-control-button {
+        margin-top: 18px;
       }
     }
   </style>
@@ -424,7 +460,8 @@
             </button>
             <button class="quiz-option quiz-interactive" type="button" data-letter="b" data-correct="true"
               data-feedback="Exatamente! A Amazônia regula as chuvas e o clima do mundo todo. Sem ela, o aquecimento global acelera, o gelo derrete e o nível do mar sobe, afetando países costeiros como a Guiné-Bissau.">
-              b) Acelerando o aquecimento global, derretendo geleiras e fazendo o nível do mar subir, o que ameaça países
+              b) Acelerando o aquecimento global, derretendo geleiras e fazendo o nível do mar subir, o que ameaça
+              países
               costeiros como a Guiné-Bissau.
             </button>
             <button class="quiz-option quiz-interactive" type="button" data-letter="c" data-correct="false"
@@ -479,6 +516,27 @@
 
       var audioUnlocked = false;
 
+      // PÁGINAS DO FORMULÁRIO (QUIZ)
+      var QUIZ_PAGES = [12, 13];
+      var quizAllCorrect = false;
+
+      function isQuizPage(pageNumber) {
+        for (var i = 0; i < QUIZ_PAGES.length; i++) {
+          if (QUIZ_PAGES[i] === pageNumber) return true;
+        }
+        return false;
+      }
+
+      // Está vendo alguma página de quiz E ainda não acertou tudo?
+      function isQuizViewLocked() {
+        if (quizAllCorrect) return false;
+        var currentView = $book.turn('view') || [];
+        for (var i = 0; i < currentView.length; i++) {
+          if (isQuizPage(currentView[i])) return true;
+        }
+        return false;
+      }
+
       function unlockAudioOnce() {
         if (audioUnlocked) return;
         flipSound.muted = true;
@@ -509,8 +567,27 @@
         gradients: true,
         acceleration: true,
         when: {
-          turning: function () {
-            // Só toca se já houve interação do usuário
+          turning: function (event, page, view) {
+            // BLOQUEIA SAIR DO FORMULÁRIO ENQUANTO NÃO ACERTOU TUDO
+            if (isQuizViewLocked()) {
+              var currentView = $book.turn('view') || [];
+              var stayingOnSameView = false;
+
+              for (var i = 0; i < currentView.length; i++) {
+                if (currentView[i] === page) {
+                  stayingOnSameView = true;
+                  break;
+                }
+              }
+
+              // Se está tentando ir para uma página fora do formulário, cancela
+              if (!stayingOnSameView) {
+                event.preventDefault();
+                return;
+              }
+            }
+
+            // Som da página
             if (!audioUnlocked) return;
             flipSound.currentTime = 0;
             flipSound.play().catch(function () { /* evita erro no console */ });
@@ -523,15 +600,22 @@
         // NÃO vira página se clicar em hotspot de vídeo ou na área interativa do quiz
         if ($(e.target).closest('.hotspot-play, .quiz-interactive').length) return;
 
+        // ENQUANTO ESTIVER RESPONDENDO O FORMULÁRIO (QUIZ), NÃO VIRA PÁGINA
+        if (isQuizViewLocked()) return;
+
         var pos = e.pageX - $book.offset().left;
         if (pos < $book.width() / 2) $book.turn('previous');
         else $book.turn('next');
       });
 
-      // Teclado ← →
+      // Teclado ← → (desativado enquanto estiver no formulário/quiz sem todas corretas)
       $(document).on('keydown', function (e) {
-        if (e.key === "ArrowLeft") $book.turn('previous');
-        if (e.key === "ArrowRight") $book.turn('next');
+        if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          if (isQuizViewLocked()) return;
+
+          if (e.key === "ArrowLeft") $book.turn('previous');
+          if (e.key === "ArrowRight") $book.turn('next');
+        }
       });
 
       // Ajuste no resize
@@ -602,7 +686,7 @@
         var $btn = $(this);
         var $question = $btn.closest('.quiz-question');
 
-        // Marca alternativa escolhida (apenas selecionada por enquanto)
+        // Marca alternativa escolhida
         $question.find('.quiz-option')
           .removeClass('is-selected is-correct is-incorrect');
         $btn.addClass('is-selected');
@@ -613,7 +697,7 @@
           .removeAttr('data-status');
 
         // Verifica globalmente (todas as 5 perguntas)
-        var totalQuestions = $('.quiz-question').length; // deve ser 5
+        var totalQuestions = $('.quiz-question').length; // 5
         var answeredQuestions = $('.quiz-question').filter(function () {
           return $(this).find('.quiz-option.is-selected').length > 0;
         }).length;
@@ -623,7 +707,12 @@
           return;
         }
 
+        // Remove botão antigo (prosseguir/tentar novamente), se existir
+        $('.quiz-control-button').remove();
+
         // Todas respondidas: agora mostra certo/errado e feedback de cada uma
+        var allCorrect = true;
+
         $('.quiz-question').each(function () {
           var $q = $(this);
           var $selected = $q.find('.quiz-option.is-selected');
@@ -641,7 +730,62 @@
           $feedback
             .text(feedbackText)
             .attr('data-status', isCorrect ? 'correct' : 'incorrect');
+
+          if (!isCorrect) {
+            allCorrect = false;
+          }
         });
+
+        var $lastOverlay = $('.quiz-overlay').last();
+
+        if (allCorrect) {
+          // ACERTOU TODAS: libera navegação e mostra "PROSSEGUIR"
+          quizAllCorrect = true;
+
+          $('<button/>', {
+            type: 'button',
+            class: 'quiz-control-button quiz-next',
+            text: 'PROSSEGUIR'
+          }).appendTo($lastOverlay);
+        } else {
+          // ERROU PELO MENOS UMA: mostra "TENTAR NOVAMENTE" e mantém bloqueado
+          quizAllCorrect = false;
+
+          $('<button/>', {
+            type: 'button',
+            class: 'quiz-control-button quiz-retry',
+            text: 'TENTAR NOVAMENTE'
+          }).appendTo($lastOverlay);
+        }
+      });
+
+      // Botão PROSSEGUIR -> vai para a página 14 (primeira após o formulário)
+      $(document).on('click', '.quiz-next', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        // como quizAllCorrect = true, o bloqueio de navegação é liberado
+        $book.turn('page', 14);
+      });
+
+      // Botão TENTAR NOVAMENTE -> reseta tudo
+      $(document).on('click', '.quiz-retry', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Reset de seleção e feedback
+        $('.quiz-option')
+          .removeClass('is-selected, is-correct, is-incorrect')
+          .removeClass('is-selected is-correct is-incorrect');
+
+        $('.quiz-feedback')
+          .text('')
+          .removeAttr('data-status');
+
+        // Remove botões de controle
+        $('.quiz-control-button').remove();
+
+        // Continua bloqueado no formulário
+        quizAllCorrect = false;
       });
     });
   </script>
