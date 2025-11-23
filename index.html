@@ -479,7 +479,7 @@
     <div class="page">
       <img src="./image/15.jpg" alt="Página 15">
       <button class="hotspot-play" aria-label="Assistir ao vídeo (página 15)"
-        data-video="https://www.youtube.com/embed/s8DmKUQ-m2E" style="left: 42%; top: 73%; width: 22%;">
+        data-video="https://www.youtube.com/embed/NPAyKPJovd8" style="left: 42%; top: 73%; width: 22%;">
       </button>
       <button class="hotspot-play" aria-label="jogar (página 15)"
         data-video="https://scratch.mit.edu/projects/1212987185/embed" style="left: 70%; top: 75%; width: 18%;">
@@ -519,6 +519,7 @@
       // PÁGINAS DO FORMULÁRIO (QUIZ)
       var QUIZ_PAGES = [12, 13];
       var quizAllCorrect = false;
+      var quizEvaluated = false; // controla se já foi avaliado (apareceu PROSSEGUIR/TENTAR NOVAMENTE)
 
       function isQuizPage(pageNumber) {
         for (var i = 0; i < QUIZ_PAGES.length; i++) {
@@ -683,6 +684,12 @@
         e.preventDefault();
         e.stopPropagation();
 
+        // SE JÁ FOI AVALIADO (apareceu PROSSEGUIR ou TENTAR NOVAMENTE),
+        // NÃO DEIXA MAIS TROCAR AS RESPOSTAS
+        if (quizEvaluated) {
+          return;
+        }
+
         var $btn = $(this);
         var $question = $btn.closest('.quiz-question');
 
@@ -706,6 +713,9 @@
         if (answeredQuestions !== totalQuestions) {
           return;
         }
+
+        // A PARTIR DAQUI, O QUIZ FOI AVALIADO (aparecerá PROSSEGUIR ou TENTAR NOVAMENTE)
+        quizEvaluated = true;
 
         // Remove botão antigo (prosseguir/tentar novamente), se existir
         $('.quiz-control-button').remove();
@@ -774,7 +784,6 @@
 
         // Reset de seleção e feedback
         $('.quiz-option')
-          .removeClass('is-selected, is-correct, is-incorrect')
           .removeClass('is-selected is-correct is-incorrect');
 
         $('.quiz-feedback')
@@ -786,6 +795,9 @@
 
         // Continua bloqueado no formulário
         quizAllCorrect = false;
+
+        // Libera nova tentativa: agora pode alternar as respostas novamente
+        quizEvaluated = false;
       });
     });
   </script>
