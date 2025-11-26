@@ -638,6 +638,77 @@
 
       var audioUnlocked = false;
 
+      // --- CONTROLE DE DUBLAGEM (NARRAÇÃO POR PÁGINA) ---
+      var narration = {
+        audios: [],
+        currentIndex: 0,
+        playing: false
+      };
+
+      function stopNarration() {
+        if (narration.audios && narration.audios.length) {
+          for (var i = 0; i < narration.audios.length; i++) {
+            try {
+              narration.audios[i].pause();
+              // limpar src reduz consumo, o browser libera depois
+              narration.audios[i].src = '';
+            } catch (e) { }
+          }
+        }
+        narration.audios = [];
+        narration.currentIndex = 0;
+        narration.playing = false;
+      }
+
+      // view = array de páginas visíveis (ex.: [2,3], [4,5]...)
+      function playPageAudios(view) {
+        // carrega somente quando chega na página
+        stopNarration();
+        if (!audioUnlocked) return; // precisa de interação prévia do usuário
+
+        if (!view || !view.length) return;
+
+        // monta lista de páginas que vão tocar (2 e 3, 4 e 5, etc.)
+        var pagesWithAudio = [];
+        for (var i = 0; i < view.length; i++) {
+          var p = view[i];
+          if (!p || p < 1) continue;
+          pagesWithAudio.push(p);
+        }
+        if (!pagesWithAudio.length) return;
+
+        narration.audios = [];
+        narration.currentIndex = 0;
+        narration.playing = false;
+
+        for (var j = 0; j < pagesWithAudio.length; j++) {
+          (function (idx) {
+            var pageNum = pagesWithAudio[idx];
+            var a = new Audio('audio/pt-br/' + pageNum + '.m4a');
+            // não faz preload automático, só carrega quando der play
+            a.preload = 'none';
+            a.addEventListener('ended', function () {
+              narration.currentIndex++;
+              if (narration.currentIndex < narration.audios.length) {
+                try {
+                  narration.audios[narration.currentIndex].play().catch(function () { });
+                } catch (e) { }
+              } else {
+                narration.playing = false;
+              }
+            });
+            narration.audios.push(a);
+          })(j);
+        }
+
+        if (narration.audios.length) {
+          narration.playing = true;
+          try {
+            narration.audios[0].play().catch(function () { });
+          } catch (e) { }
+        }
+      }
+
       // PÁGINAS DO FORMULÁRIO (QUIZ)
       var QUIZ_PAGES = [12, 13];
       var quizAllCorrect = false;
@@ -691,6 +762,9 @@
         acceleration: true,
         when: {
           turning: function (event, page, view) {
+            // ao iniciar virada, para a narração atual
+            stopNarration();
+
             // BLOQUEIA SAIR DO FORMULÁRIO ENQUANTO NÃO ACERTOU TUDO
             if (isQuizViewLocked()) {
               var currentView = $book.turn('view') || [];
@@ -714,6 +788,11 @@
             if (!audioUnlocked) return;
             flipSound.currentTime = 0;
             flipSound.play().catch(function () { /* evita erro no console */ });
+          },
+          turned: function (event, page, view) {
+            // ao chegar na nova página (ou par), toca dublagem das páginas visíveis
+            // exemplo: view [2,3] -> toca 2.m4a depois 3.m4a
+            playPageAudios(view);
           }
         }
       });
@@ -752,6 +831,9 @@
       var $iframe = $('#videoFrame');
 
       function openVideoModal(videoUrl) {
+        // ao abrir vídeo, para a narração também
+        stopNarration();
+
         var url = new URL(videoUrl, window.location.href);
         if (!url.searchParams.has('autoplay')) url.searchParams.set('autoplay', '1');
         if (!url.searchParams.has('rel')) url.searchParams.set('rel', '0');
