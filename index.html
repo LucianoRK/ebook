@@ -54,29 +54,22 @@
       width: 100%;
       height: 100%;
       background: transparent;
-      /* mantém transparente */
       overflow: visible;
-      /* deixa a sombra aparecer */
       border-radius: 10px;
-      /* opcional: cantos arredondados */
     }
 
-    /* sombra externa suave */
     .page::before {
       content: "";
       position: absolute;
       inset: 0;
-      /* cobre toda a página */
       border-radius: inherit;
       box-shadow:
         0 14px 34px rgba(0, 0, 0, .18),
         0 3px 10px rgba(0, 0, 0, .12);
       pointer-events: none;
-      /* não bloqueia cliques/viradas */
       z-index: 1;
     }
 
-    /* linha de borda sutil por cima da imagem */
     .page::after {
       content: "";
       position: absolute;
@@ -111,7 +104,6 @@
 
     .video-modal__content {
       position: relative;
-      /* maior, respeitando viewport: limita por largura, altura e um teto de 1800px */
       width: min(98vw, calc(98vh * (16/9)), 1800px);
       aspect-ratio: 16 / 9;
       background: #000;
@@ -143,7 +135,6 @@
     /* -------- Hotspot do play -------- */
     .hotspot-play {
       position: absolute;
-      /* Ajuste fino: porcentagens para ficar sobre o play da arte */
       left: 60%;
       top: 72%;
       width: 22%;
@@ -154,9 +145,7 @@
       border: 0;
       background: transparent;
       z-index: 5;
-      /* acima da imagem da página */
       pointer-events: auto;
-      /* garante captação do clique */
       font-family: "Comic Sans MS", "Comic Sans", cursive;
     }
 
@@ -176,7 +165,6 @@
       border-radius: 16px;
       padding: 16px 18px;
       overflow-y: auto;
-      /* só aparece scroll se realmente precisar */
     }
 
     .quiz-title {
@@ -213,7 +201,6 @@
       filter: brightness(0.98);
     }
 
-    /* estado de selecionado (antes de mostrar certo/errado) */
     .quiz-option.is-selected {
       outline: 2px dashed rgba(0, 0, 0, 0.4);
     }
@@ -242,7 +229,6 @@
       font-weight: 500;
     }
 
-    /* Botões PROSSEGUIR / TENTAR NOVAMENTE */
     .quiz-control-button {
       margin-top: 35%;
       align-self: flex-end;
@@ -253,7 +239,6 @@
       box-shadow: 0 2px 4px rgba(0, 0, 0, .25);
     }
 
-    /* PROSSEGUIR (verde) */
     .quiz-control-button.quiz-next {
       background: #1b8f4b;
       color: #fff;
@@ -263,10 +248,8 @@
       filter: brightness(0.97);
     }
 
-    /* TENTAR NOVAMENTE (vermelho claro) */
     .quiz-control-button.quiz-retry {
       background: #f28b82;
-      /* vermelho claro */
       color: #fff;
     }
 
@@ -274,7 +257,6 @@
       filter: brightness(0.97);
     }
 
-    /* >>> Comic Sans, 14px e MAIÚSCULO em todo o formulário/quiz <<< */
     .quiz-overlay,
     .quiz-overlay * {
       font-family: "Comic Sans MS", "Comic Sans", cursive;
@@ -301,10 +283,6 @@
     .links-title {
       font-weight: 700;
       margin-bottom: 4px;
-    }
-
-    .links-subtitle {
-      margin-bottom: 8px;
     }
 
     .links-list {
@@ -335,7 +313,6 @@
       filter: brightness(0.97);
     }
 
-    /* fontes da área de links iguais ao formulário/quiz */
     .links-overlay,
     .links-overlay * {
       font-family: "Comic Sans MS", "Comic Sans", cursive;
@@ -417,7 +394,7 @@
     <div class="page"><img src="./image/10.jpg" alt="Página 10"></div>
     <div class="page"><img src="./image/11.jpg" alt="Página 11"></div>
 
-    <!-- PÁGINA 12 - QUIZ (Perguntas 1, 2 e 3) -->
+    <!-- PÁGINA 12 - QUIZ -->
     <div class="page">
       <img src="./image/default.jpg" alt="Página 12 - Quiz 1 a 3">
       <div class="quiz-overlay quiz-interactive">
@@ -492,7 +469,7 @@
       </div>
     </div>
 
-    <!-- PÁGINA 13 - QUIZ (Perguntas 4 e 5) -->
+    <!-- PÁGINA 13 - QUIZ -->
     <div class="page">
       <img src="./image/default.jpg" alt="Página 13 - Quiz 4 e 5">
       <div class="quiz-overlay quiz-interactive">
@@ -638,7 +615,7 @@
 
       var audioUnlocked = false;
 
-      // --- CONTROLE DE DUBLAGEM (NARRAÇÃO POR PÁGINA) ---
+      // ------- CONTROLE DE DUBLAGEM / NARRAÇÃO -------
       var narration = {
         audios: [],
         currentIndex: 0,
@@ -650,7 +627,6 @@
           for (var i = 0; i < narration.audios.length; i++) {
             try {
               narration.audios[i].pause();
-              // limpar src reduz consumo, o browser libera depois
               narration.audios[i].src = '';
             } catch (e) { }
           }
@@ -660,59 +636,76 @@
         narration.playing = false;
       }
 
-      // view = array de páginas visíveis (ex.: [2,3], [4,5]...)
-      function playPageAudios(view) {
-        // carrega somente quando chega na página
+      // Retorna o par de páginas que compartilha a narração
+      // Ex: p=2 ou 3 -> [2,3]; p=4 ou 5 -> [4,5]; p=1 -> [1]
+      function getNarrationPagesFor(page) {
+        if (page <= 1) return [1];
+        var base = (page % 2 === 0) ? page : (page - 1);
+        return [base, base + 1];
+      }
+
+      // Tocar áudios do par correspondente à página
+      function playPageAudiosFrom(page) {
         stopNarration();
-        if (!audioUnlocked) return; // precisa de interação prévia do usuário
+        if (!audioUnlocked) return;
 
-        if (!view || !view.length) return;
-
-        // monta lista de páginas que vão tocar (2 e 3, 4 e 5, etc.)
-        var pagesWithAudio = [];
-        for (var i = 0; i < view.length; i++) {
-          var p = view[i];
-          if (!p || p < 1) continue;
-          pagesWithAudio.push(p);
-        }
-        if (!pagesWithAudio.length) return;
+        var pagesToPlay = getNarrationPagesFor(page);
+        if (!pagesToPlay || !pagesToPlay.length) return;
 
         narration.audios = [];
         narration.currentIndex = 0;
         narration.playing = false;
 
-        for (var j = 0; j < pagesWithAudio.length; j++) {
+        for (var i = 0; i < pagesToPlay.length; i++) {
           (function (idx) {
-            var pageNum = pagesWithAudio[idx];
-            var a = new Audio('audio/pt-br/' + pageNum + '.m4a');
-            // não faz preload automático, só carrega quando der play
+            var p = pagesToPlay[idx];
+            var a = new Audio('audio/pt-br/' + p + '.m4a');
             a.preload = 'none';
             a.addEventListener('ended', function () {
               narration.currentIndex++;
               if (narration.currentIndex < narration.audios.length) {
                 try {
-                  narration.audios[narration.currentIndex].play().catch(function () { });
-                } catch (e) { }
+                  narration.audios[narration.currentIndex].play().catch(function () {
+                    narration.playing = false;
+                  });
+                } catch (e) {
+                  narration.playing = false;
+                }
               } else {
                 narration.playing = false;
               }
             });
             narration.audios.push(a);
-          })(j);
+          })(i);
         }
 
         if (narration.audios.length) {
           narration.playing = true;
           try {
-            narration.audios[0].play().catch(function () { });
-          } catch (e) { }
+            narration.audios[0].play().catch(function () {
+              narration.playing = false;
+            });
+          } catch (e) {
+            narration.playing = false;
+          }
         }
       }
 
-      // PÁGINAS DO FORMULÁRIO (QUIZ)
+      // ------ BLOQUEIO DE INTERAÇÃO A PARTIR DA PÁGINA 4 ENQUANTO TIVER ÁUDIO TOCANDO ------
+      function isInteractionLocked() {
+        if (!narration.playing) return false;
+        var currentView = $book.turn('view') || [];
+        for (var i = 0; i < currentView.length; i++) {
+          // *** ALTERADO: agora só bloqueia se a página visível for >= 4 ***
+          if (currentView[i] >= 4) return true;
+        }
+        return false;
+      }
+
+      // ------- QUIZ -------
       var QUIZ_PAGES = [12, 13];
       var quizAllCorrect = false;
-      var quizEvaluated = false; // controla se já foi avaliado (apareceu PROSSEGUIR/TENTAR NOVAMENTE)
+      var quizEvaluated = false;
 
       function isQuizPage(pageNumber) {
         for (var i = 0; i < QUIZ_PAGES.length; i++) {
@@ -721,7 +714,6 @@
         return false;
       }
 
-      // Está vendo alguma página de quiz E ainda não acertou tudo?
       function isQuizViewLocked() {
         if (quizAllCorrect) return false;
         var currentView = $book.turn('view') || [];
@@ -731,6 +723,7 @@
         return false;
       }
 
+      // ------- DESBLOQUEIO DE ÁUDIO (POLÍTICA DE AUTOPLAY) -------
       function unlockAudioOnce() {
         if (audioUnlocked) return;
         flipSound.muted = true;
@@ -739,20 +732,19 @@
           flipSound.currentTime = 0;
           flipSound.muted = false;
           audioUnlocked = true;
-        }).catch(function () { /* ignora */ });
-        // Remove os listeners depois da primeira tentativa
+        }).catch(function () { });
         window.removeEventListener('click', unlockAudioOnce);
         window.removeEventListener('keydown', unlockAudioOnce);
         window.removeEventListener('touchstart', unlockAudioOnce, { passive: true });
         window.removeEventListener('pointerdown', unlockAudioOnce);
       }
 
-      // Desbloqueia áudio na primeira interação (desktop e mobile)
       window.addEventListener('click', unlockAudioOnce);
       window.addEventListener('keydown', unlockAudioOnce);
       window.addEventListener('touchstart', unlockAudioOnce, { passive: true });
       window.addEventListener('pointerdown', unlockAudioOnce);
 
+      // ------- FLIPBOOK / TURN.JS -------
       $book.turn({
         width: $book.width(),
         height: $book.height(),
@@ -761,59 +753,67 @@
         gradients: true,
         acceleration: true,
         when: {
-          turning: function (event, page, view) {
-            // ao iniciar virada, para a narração atual
+          turning: function (event, page /*, view */) {
+            // Parar narração ao iniciar virada
             stopNarration();
 
-            // BLOQUEIA SAIR DO FORMULÁRIO ENQUANTO NÃO ACERTOU TUDO
+            // Bloqueio do formulário (quiz)
             if (isQuizViewLocked()) {
               var currentView = $book.turn('view') || [];
               var stayingOnSameView = false;
-
               for (var i = 0; i < currentView.length; i++) {
                 if (currentView[i] === page) {
                   stayingOnSameView = true;
                   break;
                 }
               }
-
-              // Se está tentando ir para uma página fora do formulário, cancela
               if (!stayingOnSameView) {
                 event.preventDefault();
                 return;
               }
             }
 
+            // Bloqueio geral de interação enquanto áudios do par (>=4) estiverem tocando
+            if (isInteractionLocked()) {
+              event.preventDefault();
+              return;
+            }
+
             // Som da página
             if (!audioUnlocked) return;
             flipSound.currentTime = 0;
-            flipSound.play().catch(function () { /* evita erro no console */ });
+            flipSound.play().catch(function () { });
           },
-          turned: function (event, page, view) {
-            // ao chegar na nova página (ou par), toca dublagem das páginas visíveis
-            // exemplo: view [2,3] -> toca 2.m4a depois 3.m4a
-            playPageAudios(view);
+          turned: function (event, page /*, view */) {
+            // Ao chegar na nova página: dispara dublagem do par
+            playPageAudiosFrom(page);
           }
         }
       });
 
-      // Clique para virar 
+      // Clique para virar página
       $book.on('click', function (e) {
-        // NÃO vira página se clicar em hotspot de vídeo, na área interativa do quiz ou nos links
+        // NÃO vira se clicar em hotspot, quiz ou links
         if ($(e.target).closest('.hotspot-play, .quiz-interactive, .links-interactive').length) return;
 
-        // ENQUANTO ESTIVER RESPONDENDO O FORMULÁRIO (QUIZ), NÃO VIRA PÁGINA
+        // Bloqueio quiz
         if (isQuizViewLocked()) return;
+
+        // Bloqueio dublagem (a partir da pág.4)
+        if (isInteractionLocked()) return;
 
         var pos = e.pageX - $book.offset().left;
         if (pos < $book.width() / 2) $book.turn('previous');
         else $book.turn('next');
       });
 
-      // Teclado ← → (desativado enquanto estiver no formulário/quiz sem todas corretas)
+      // Teclado ← →
       $(document).on('keydown', function (e) {
         if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          // Bloqueio quiz
           if (isQuizViewLocked()) return;
+          // Bloqueio dublagem
+          if (isInteractionLocked()) return;
 
           if (e.key === "ArrowLeft") $book.turn('previous');
           if (e.key === "ArrowRight") $book.turn('next');
@@ -826,12 +826,12 @@
         $book.turn('size', $book.width(), $book.height());
       });
 
-      /* ------- Modal de vídeo ------- */
+      // ------- MODAL DE VÍDEO -------
       var $modal = $('#videoModal');
       var $iframe = $('#videoFrame');
 
       function openVideoModal(videoUrl) {
-        // ao abrir vídeo, para a narração também
+        // abrir vídeo => para narração
         stopNarration();
 
         var url = new URL(videoUrl, window.location.href);
@@ -848,6 +848,7 @@
         $iframe.attr('src', '');
       }
 
+      // Evita que o hotspot de vídeo vire página
       $(document).on('pointerdown pointerup touchstart touchend mousedown mouseup', '.hotspot-play', function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -859,6 +860,12 @@
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
+
+        // Se interação está bloqueada (áudio do par ainda rodando) -> não abre vídeo
+        if (isInteractionLocked()) {
+          return false;
+        }
+
         var videoUrl = $(this).data('video');
         if (videoUrl) openVideoModal(videoUrl);
         return false;
@@ -883,48 +890,45 @@
         if ($modal.hasClass('open')) closeVideoModal();
       });
 
-      /* ------- LÓGICA DO QUIZ (5 perguntas no total) ------- */
+      // ------- BLOQUEIO DE LINKS ENQUANTO ÁUDIO (>=4) ESTIVER TOCANDO -------
+      $(document).on('click', 'a', function (e) {
+        if (!$(this).closest('#flipbook').length) return;
+
+        if (isInteractionLocked()) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      });
+
+      // ------- LÓGICA DO QUIZ -------
       $(document).on('click', '.quiz-option', function (e) {
         e.preventDefault();
         e.stopPropagation();
 
-        // SE JÁ FOI AVALIADO (apareceu PROSSEGUIR ou TENTAR NOVAMENTE),
-        // NÃO DEIXA MAIS TROCAR AS RESPOSTAS
-        if (quizEvaluated) {
-          return;
-        }
+        if (quizEvaluated) return;
 
         var $btn = $(this);
         var $question = $btn.closest('.quiz-question');
 
-        // Marca alternativa escolhida
         $question.find('.quiz-option')
           .removeClass('is-selected is-correct is-incorrect');
         $btn.addClass('is-selected');
 
-        // Limpa feedback dessa questão (até todas serem respondidas)
         $question.find('.quiz-feedback')
           .text('')
           .removeAttr('data-status');
 
-        // Verifica globalmente (todas as 5 perguntas)
-        var totalQuestions = $('.quiz-question').length; // 5
+        var totalQuestions = $('.quiz-question').length;
         var answeredQuestions = $('.quiz-question').filter(function () {
           return $(this).find('.quiz-option.is-selected').length > 0;
         }).length;
 
-        // Se ainda não respondeu TODAS, não mostra nada
-        if (answeredQuestions !== totalQuestions) {
-          return;
-        }
+        if (answeredQuestions !== totalQuestions) return;
 
-        // A PARTIR DAQUI, O QUIZ FOI AVALIADO (aparecerá PROSSEGUIR ou TENTAR NOVAMENTE)
         quizEvaluated = true;
-
-        // Remove botão antigo (prosseguir/tentar novamente), se existir
         $('.quiz-control-button').remove();
 
-        // Todas respondidas: agora mostra certo/errado e feedback de cada uma
         var allCorrect = true;
 
         $('.quiz-question').each(function () {
@@ -936,11 +940,9 @@
           var feedbackText = $selected.data('feedback') || '';
           var $feedback = $q.find('.quiz-feedback');
 
-          // Aplica classes finais
           $q.find('.quiz-option').removeClass('is-correct is-incorrect');
           $selected.addClass(isCorrect ? 'is-correct' : 'is-incorrect');
 
-          // Mostra texto de feedback
           $feedback
             .text(feedbackText)
             .attr('data-status', isCorrect ? 'correct' : 'incorrect');
@@ -953,18 +955,14 @@
         var $lastOverlay = $('.quiz-overlay').last();
 
         if (allCorrect) {
-          // ACERTOU TODAS: libera navegação e mostra "PROSSEGUIR"
           quizAllCorrect = true;
-
           $('<button/>', {
             type: 'button',
             class: 'quiz-control-button quiz-next',
             text: 'PROSSEGUIR'
           }).appendTo($lastOverlay);
         } else {
-          // ERROU PELO MENOS UMA: mostra "TENTAR NOVAMENTE" e mantém bloqueado
           quizAllCorrect = false;
-
           $('<button/>', {
             type: 'button',
             class: 'quiz-control-button quiz-retry',
@@ -973,20 +971,16 @@
         }
       });
 
-      // Botão PROSSEGUIR -> vai para a página 14 (primeira após o formulário)
       $(document).on('click', '.quiz-next', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        // como quizAllCorrect = true, o bloqueio de navegação é liberado
         $book.turn('page', 14);
       });
 
-      // Botão TENTAR NOVAMENTE -> reseta tudo
       $(document).on('click', '.quiz-retry', function (e) {
         e.preventDefault();
         e.stopPropagation();
 
-        // Reset de seleção e feedback
         $('.quiz-option')
           .removeClass('is-selected is-correct is-incorrect');
 
@@ -994,13 +988,9 @@
           .text('')
           .removeAttr('data-status');
 
-        // Remove botões de controle
         $('.quiz-control-button').remove();
 
-        // Continua bloqueado no formulário
         quizAllCorrect = false;
-
-        // Libera nova tentativa: agora pode alternar as respostas novamente
         quizEvaluated = false;
       });
     });
