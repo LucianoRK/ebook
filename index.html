@@ -87,6 +87,54 @@
       }
     }
 
+    /* -------- Seletor de linguagem (CAPA) -------- */
+    .language-selector {
+      position: absolute;
+      bottom: 92%;
+      left: 80%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, .25);
+      font-family: "Comic Sans MS", "Comic Sans", cursive;
+    }
+
+    .language-selector__label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .language-selector__select {
+      font-size: 12px;
+      border-radius: 999px;
+      border: 1px solid #bbb;
+      padding: 4px 8px;
+      font-family: "Comic Sans MS", "Comic Sans", cursive;
+      background: #f7f7f7;
+      cursor: pointer;
+    }
+
+    @media (max-width: 900px) {
+      .language-selector {
+        bottom: 12px;
+        padding: 6px 10px;
+      }
+
+      .language-selector__label {
+        font-size: 11px;
+      }
+
+      .language-selector__select {
+        font-size: 11px;
+      }
+    }
+
     /* -------- Modal de vídeo -------- */
     .video-modal {
       position: fixed;
@@ -344,6 +392,57 @@
         min-width: 80%;
       }
     }
+
+    .language-selector__select option {
+      padding-left: 28px;
+      /* espaço pro ícone */
+      background-size: 18px 18px;
+      background-repeat: no-repeat;
+      background-position: 5px center;
+    }
+
+    /* Brasil */
+    .language-selector__select option.flag-br {
+      background-image: url('./image/bandeiras/brasil.png');
+    }
+
+    /* Cabo Verde */
+    .language-selector__select option.flag-cv {
+      background-image: url('./image/bandeiras/cabo-verde.png');
+    }
+
+    /* Guiné-Bissau */
+    .language-selector__select option.flag-gb {
+      background-image: url('./image/bandeiras/guinea-bissau.png');
+    }
+
+    /* Portugal */
+    .language-selector__select option.flag-pt {
+      background-image: url('./image/bandeiras/portugal.png');
+    }
+
+    .language-selector__select {
+      padding-left: 30px;
+      background-size: 20px 20px;
+      background-repeat: no-repeat;
+      background-position: 5px center;
+    }
+
+    #languageSelect[value="pt-br"] {
+      background-image: url('./image/bandeiras/brasil.png');
+    }
+
+    #languageSelect[value="pt-cv"] {
+      background-image: url('./image/bandeiras/cabo-verde.png');
+    }
+
+    #languageSelect[value="pt-gb"] {
+      background-image: url('./image/bandeiras/guinea-bissau.png');
+    }
+
+    #languageSelect[value="pt-pt"] {
+      background-image: url('./image/bandeiras/portugal.png');
+    }
   </style>
 
   <!-- jQuery compatível -->
@@ -358,6 +457,16 @@
     <!-- CAPA -->
     <div class="page hard">
       <img src="./image/1.jpg" alt="Página 1">
+      <!-- Seletor de linguagem -->
+      <div class="language-selector lang-interactive">
+        <select id="languageSelect" class="language-selector__select">
+          <option value="">🔇 Sem áudio</option>
+          <option value="pt-br">Brasil</option>
+          <option value="pt-cv">Cabo Verde</option>
+          <option value="pt-gb">Guiné-Bissau</option>
+          <option value="pt-pt">Portugal</option>
+        </select>
+      </div>
     </div>
 
     <!-- PÁGINAS -->
@@ -368,15 +477,15 @@
     <div class="page">
       <img src="./image/5.jpg" alt="Página 5">
       <button class="hotspot-play" aria-label="Assistir ao vídeo"
-        data-video="https://scratch.mit.edu/projects/1212995699/embed" style="left: 12%; top: 75%; width: 18%;">
-      </button>
+        data-video="https://scratch.mit.edu/projects/1212995699/embed"
+        style="left: 12%; top: 75%; width: 18%;"></button>
     </div>
 
     <div class="page">
       <img src="./image/6.jpg" alt="Página 6">
       <button class="hotspot-play" aria-label="Assistir ao vídeo"
-        data-video="https://scratch.mit.edu/projects/1212868708/embed" style="left: 64%; top: 75%; width: 18%;">
-      </button>
+        data-video="https://scratch.mit.edu/projects/1212868708/embed"
+        style="left: 64%; top: 75%; width: 18%;"></button>
     </div>
 
     <div class="page">
@@ -526,11 +635,10 @@
     <div class="page">
       <img src="./image/15.jpg" alt="Página 15">
       <button class="hotspot-play" aria-label="Assistir ao vídeo (página 15)"
-        data-video="https://www.youtube.com/embed/NPAyKPJovd8" style="left: 42%; top: 73%; width: 22%;">
-      </button>
+        data-video="https://www.youtube.com/embed/NPAyKPJovd8" style="left: 42%; top: 73%; width: 22%;"></button>
       <button class="hotspot-play" aria-label="jogar (página 15)"
-        data-video="https://scratch.mit.edu/projects/1212987185/embed" style="left: 70%; top: 75%; width: 18%;">
-      </button>
+        data-video="https://scratch.mit.edu/projects/1212987185/embed"
+        style="left: 70%; top: 75%; width: 18%;"></button>
     </div>
 
     <div class="page"><img src="./image/16.jpg" alt="Página 16"></div>
@@ -546,7 +654,8 @@
             AVALIE O E-BOOK
           </a>
 
-          <a class="links-button" href="https://portalold.ipb.pt/index.php/pt/guiaects/cursos/mestrados/curso?cod_escola=3042&cod_curso=5079"
+          <a class="links-button"
+            href="https://portalold.ipb.pt/index.php/pt/guiaects/cursos/mestrados/curso?cod_escola=3042&cod_curso=5079"
             target="_blank" rel="noopener noreferrer">
             MESTRADO IPB
           </a>
@@ -615,6 +724,10 @@
 
       var audioUnlocked = false;
 
+      // idioma atual da narração (pasta dentro de audio/)
+      // "" ou null = sem áudio
+      var currentLanguagePrefix = null;
+
       // ------- CONTROLE DE DUBLAGEM / NARRAÇÃO -------
       var narration = {
         audios: [],
@@ -647,7 +760,9 @@
       // Tocar áudios do par correspondente à página
       function playPageAudiosFrom(page) {
         stopNarration();
+
         if (!audioUnlocked) return;
+        if (!currentLanguagePrefix) return; // sem idioma selecionado => sem áudio
 
         var pagesToPlay = getNarrationPagesFor(page);
         if (!pagesToPlay || !pagesToPlay.length) return;
@@ -659,7 +774,7 @@
         for (var i = 0; i < pagesToPlay.length; i++) {
           (function (idx) {
             var p = pagesToPlay[idx];
-            var a = new Audio('audio/pt-br/' + p + '.m4a');
+            var a = new Audio('audio/' + currentLanguagePrefix + '/' + p + '.m4a');
             a.preload = 'none';
             a.addEventListener('ended', function () {
               narration.currentIndex++;
@@ -696,7 +811,6 @@
         if (!narration.playing) return false;
         var currentView = $book.turn('view') || [];
         for (var i = 0; i < currentView.length; i++) {
-          // *** ALTERADO: agora só bloqueia se a página visível for >= 4 ***
           if (currentView[i] >= 4) return true;
         }
         return false;
@@ -785,7 +899,7 @@
             flipSound.play().catch(function () { });
           },
           turned: function (event, page /*, view */) {
-            // Ao chegar na nova página: dispara dublagem do par
+            // Ao chegar na nova página: dispara dublagem do par (se idioma selecionado)
             playPageAudiosFrom(page);
           }
         }
@@ -793,8 +907,8 @@
 
       // Clique para virar página
       $book.on('click', function (e) {
-        // NÃO vira se clicar em hotspot, quiz ou links
-        if ($(e.target).closest('.hotspot-play, .quiz-interactive, .links-interactive').length) return;
+        // NÃO vira se clicar em hotspot, quiz, links ou seletor de idioma
+        if ($(e.target).closest('.hotspot-play, .quiz-interactive, .links-interactive, .lang-interactive').length) return;
 
         // Bloqueio quiz
         if (isQuizViewLocked()) return;
@@ -901,6 +1015,21 @@
         }
       });
 
+      // ------- SELETOR DE LINGUAGEM (SELECT) -------
+      $('#languageSelect').on('change', function (e) {
+        e.stopPropagation();
+
+        var lang = $(this).val();
+        if (!lang) {
+          currentLanguagePrefix = null; // sem áudio
+        } else {
+          currentLanguagePrefix = String(lang);
+        }
+
+        // parar qualquer narração atual ao trocar idioma / desligar áudio
+        stopNarration();
+      });
+
       // ------- LÓGICA DO QUIZ -------
       $(document).on('click', '.quiz-option', function (e) {
         e.preventDefault();
@@ -940,7 +1069,7 @@
           var feedbackText = $selected.data('feedback') || '';
           var $feedback = $q.find('.quiz-feedback');
 
-          $q.find('.quiz-option').removeClass('is-correct is-incorrect');
+          $q.find('.quiz-option').removeClass('is-correct, is-incorrect');
           $selected.addClass(isCorrect ? 'is-correct' : 'is-incorrect');
 
           $feedback
@@ -992,6 +1121,10 @@
 
         quizAllCorrect = false;
         quizEvaluated = false;
+      });
+
+      document.getElementById("languageSelect").addEventListener("change", function () {
+        this.setAttribute("value", this.value);
       });
     });
   </script>
